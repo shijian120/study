@@ -1,7 +1,12 @@
 package com.sj.aop.aopdemo;
 
+import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.Signature;
 import org.aspectj.lang.annotation.*;
+import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
+
+import java.lang.reflect.Method;
 
 /**
  * ClassName: CalculatorAspect
@@ -36,8 +41,14 @@ public class LogAspect {
 	
 	
 	@Before("execution(public int com.sj.aop.CalculatorImpl.*(int,int))")
-	public void logStart() {
+	public void logStart(JoinPoint jp) {
+		Object[] args = jp.getArgs();
+		// 签名/ 就是方法的全部签名, 需要转换成子类才能获取到方法名
+		MethodSignature signature = (MethodSignature) jp.getSignature();
 		
+		Method method = signature.getMethod();
+		System.out.println("方法名: " + method.getName());
+		System.out.println("参数: " + args[0] + "," + args[1]);
 		System.out.println("日志开始");
 	
 	}
@@ -60,6 +71,12 @@ public class LogAspect {
 	public void  logException(){
 		
 		System.out.println("日志异常");
+	}
+	
+	
+	// 把切点表达式抽取出来
+	@Pointcut("execution(public int com.sj.aop.CalculatorImpl.*(int,int))")
+	public void cal(){
 	}
 	
 }
