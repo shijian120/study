@@ -1,0 +1,52 @@
+# 编译输出目录
+**/target/
+**/out/
+**/bin/
+
+# IDE 相关（IntelliJ IDEA）
+.idea/
+*.iml
+*.iws
+*.ipr
+.idea_modules/
+
+# Eclipse 相关
+.classpath
+.project
+.settings/
+*.launch
+
+# VS Code 相关
+.vscode/
+*.code-workspace
+
+# Maven 相关（一般无需忽略 pom.xml，但忽略本地仓库）
+**/pom.xml.tag
+**/pom.xml.releaseBackup
+**/pom.xml.versionsBackup
+**/pom.xml.next
+**/release.properties
+**/dependency-reduced-pom.xml
+**/buildNumber.properties
+**/.mvn/timing.properties
+**/.mvn/wrapper/maven-wrapper.jar
+
+# 日志文件
+*.log
+*.log.gz
+
+# 操作系统临时文件
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# 自定义的配置文件（如含有本地敏感信息）
+# application-local.properties
+# application-dev.properties
+
+# 其他临时文件
+*.tmp
+*.bak
+*.orig
