@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SpringMVC 测试工作台</title>
+    <style>
+        /* ---------- 全局重置 & 布局 ---------- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
+            background: #f1f4f9;
+            height: 100vh;
+            display: flex;
+        }
+
+        /* ---------- 左侧菜单 ---------- */
+        .sidebar {
+            width: 260px;
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1.2rem 0;
+            overflow-y: auto;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar .logo {
+            padding: 0 1.2rem 1.2rem 1.2rem;
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #facc15;
+            border-bottom: 1px solid #334155;
+            letter-spacing: 0.5px;
+        }
+
+        .sidebar .logo small {
+            font-weight: 400;
+            font-size: 0.75rem;
+            color: #94a3b8;
+            display: block;
+            margin-top: 2px;
+        }
+
+        .menu-group {
+            padding: 0.8rem 0 0.4rem 1.2rem;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #94a3b8;
+            font-weight: 600;
+        }
+
+        .menu-item {
+            padding: 0.6rem 1.2rem 0.6rem 1.8rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.15s;
+            border-left: 3px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .menu-item:hover {
+            background: #334155;
+            color: #f1f5f9;
+        }
+
+        .menu-item.active {
+            background: #2d3a4e;
+            border-left-color: #facc15;
+            color: #facc15;
+            font-weight: 500;
+        }
+
+        .menu-item .badge {
+            font-size: 0.6rem;
+            background: #475569;
+            color: #cbd5e1;
+            padding: 0 0.5rem;
+            border-radius: 10px;
+            margin-left: auto;
+        }
+
+        /* ---------- 右侧主区域 ---------- */
+        .main {
+            flex: 1;
+            padding: 1.8rem 2rem;
+            overflow-y: auto;
+            background: #f8fafc;
+        }
+
+        .main .breadcrumb {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-bottom: 0.8rem;
+        }
+
+        .main .breadcrumb strong {
+            color: #0f172a;
+        }
+
+        .request-panel {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+            padding: 1.8rem 2rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        /* 请求栏 (方法 + URL) */
+        .request-bar {
+            display: flex;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.8rem;
+            align-items: center;
+        }
+
+        .request-bar select {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            border: 1px solid #d1d9e6;
+            background: white;
+            font-weight: 500;
+            font-size: 0.9rem;
+            background-color: #f1f5f9;
+            cursor: pointer;
+        }
+
+        .request-bar input[type="text"] {
+            flex: 1;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            border: 1px solid #d1d9e6;
+            font-size: 0.95rem;
+            background: white;
+            min-width: 200px;
+        }
+
+        .request-bar input[type="text"]:focus {
+            border-color: #64748b;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.15);
+        }
+
+        /* 参数区域 */
+        .params-section {
+            margin: 1.2rem 0;
+        }
+
+        .params-section .section-label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #1e293b;
+            margin-bottom: 0.6rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .params-section .section-label .hint {
+            font-weight: 400;
+            font-size: 0.75rem;
+            color: #94a3b8;
+        }
+
+        /* 键值对 (form-data, headers, cookies) */
+        .kv-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .kv-row {
+            display: flex;
+            gap: 0.6rem;
+            align-items: center;
+        }
+
+        .kv-row input {
+            padding: 0.4rem 0.6rem;
+            border-radius: 6px;
+            border: 1px solid #d1d9e6;
+            font-size: 0.85rem;
+            flex: 1;
+        }
+
+        .kv-row input:focus {
+            border-color: #64748b;
+            outline: none;
+        }
+
+        .kv-row .btn-remove {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 0 0.2rem;
+        }
+
+        .kv-row .btn-remove:hover {
+            color: #dc2626;
+        }
+
+        .btn-add-kv {
+            background: transparent;
+            border: 1px dashed #cbd5e1;
+            border-radius: 6px;
+            padding: 0.3rem 0.8rem;
+            font-size: 0.8rem;
+            color: #64748b;
+            cursor: pointer;
+            margin-top: 0.2rem;
+            align-self: flex-start;
+        }
+
+        .btn-add-kv:hover {
+            border-color: #94a3b8;
+            color: #1e293b;
+        }
+
+        /* JSON 文本域 */
+        .json-textarea {
+            width: 100%;
+            min-height: 120px;
+            font-family: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace;
+            font-size: 0.85rem;
+            padding: 0.8rem;
+            border-radius: 8px;
+            border: 1px solid #d1d9e6;
+            background: #fafbfc;
+            resize: vertical;
+            tab-size: 2;
+        }
+
+        .json-textarea:focus {
+            border-color: #64748b;
+            outline: none;
+        }
+
+        /* 文件上传 */
+        .file-upload-area {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .file-upload-area input[type="file"] {
+            padding: 0.4rem 0;
+        }
+
+        .file-upload-area .file-name {
+            font-size: 0.85rem;
+            color: #475569;
+        }
+
+        /* 发送按钮 & 响应 */
+        .action-bar {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            margin: 1.5rem 0 1rem 0;
+            flex-wrap: wrap;
+        }
+
+        .btn-send {
+            background: #1e293b;
+            color: white;
+            border: none;
+            padding: 0.6rem 2.2rem;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-send:hover {
+            background: #0f172a;
+        }
+
+        .btn-send:active {
+            transform: scale(0.97);
+        }
+
+        .btn-send:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-clear {
+            background: transparent;
+            border: 1px solid #d1d9e6;
+            padding: 0.6rem 1.5rem;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            color: #475569;
+        }
+
+        .btn-clear:hover {
+            background: #f1f5f9;
+        }
+
+        /* 响应区域 */
+        .response-area {
+            margin-top: 1.5rem;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 1.2rem;
+        }
+
+        .response-area .resp-header {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 0.6rem;
+        }
+
+        .response-area .resp-status {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .response-area .resp-status.good {
+            color: #16a34a;
+        }
+        .response-area .resp-status.bad {
+            color: #dc2626;
+        }
+
+        .response-area .resp-time {
+            color: #64748b;
+            font-size: 0.8rem;
+        }
+
+        .response-area .resp-body {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 1rem 1.2rem;
+            border-radius: 10px;
+            overflow-x: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 350px;
+            overflow-y: auto;
+        }
+
+        .response-area .resp-body .placeholder {
+            color: #94a3b8;
+            font-style: italic;
+        }
+
+        /* 辅助 */
+        .hidden {
+            display: none !important;
+        }
+
+        .mt-2 { margin-top: 0.8rem; }
+        .mb-1 { margin-bottom: 0.4rem; }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .sidebar { width: 200px; }
+            .main { padding: 1rem; }
+            .request-panel { padding: 1rem; }
+        }
+        @media (max-width: 600px) {
+            body { flex-direction: column; }
+            .sidebar { width: 100%; height: auto; max-height: 300px; }
+            .main { height: calc(100vh - 300px); }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ====== 左侧菜单 ====== -->
+<aside class="sidebar">
+    <div class="logo">
+        🧪 SpringMVC
+        <small>测试工作台</small>
+    </div>
+
+    <div class="menu-group">📤 请求测试</div>
+    <div id="menuRequest"></div>
+
+    <div class="menu-group">📩 响应测试</div>
+    <div id="menuResponse"></div>
+</aside>
+
+<!-- ====== 右侧主区域 ====== -->
+<main class="main">
+    <div class="breadcrumb">
+        <span id="breadcrumb">请从左侧选择实验</span>
+    </div>
+
+    <div class="request-panel" id="panel">
+        <!-- 由 JS 动态渲染 -->
+        <div id="dynamicContent">
+            <p style="color: #94a3b8; text-align: center; padding: 3rem 0;">👈 点击左侧实验，开始配置请求</p>
+        </div>
+    </div>
+</main>
+
+<script>
+    // ============================================================
+    // 1. 实验数据定义
+    // ============================================================
+    const experiments = {
+        // ---------- 请求实验 ----------
+        req1: {
+            id: 'req1',
+            group: 'request',
+            label: '普通变量收集',
+            desc: '@RequestParam',
+            method: 'GET',
+            defaultUrl: '/test01',
+            paramsType: 'form', // form, json, file, headers, cookies, none
+            formFields: [
+                { key: 'username', value: 'zhangsan', placeholder: '用户名' },
+                { key: 'password', value: '123456', placeholder: '密码' },
+                { key: 'phone', value: '13800138000', placeholder: '手机号' },
+                { key: 'agree', value: 'true', placeholder: '同意协议（true/false）' },
+            ]
+        },
+        req2: {
+            id: 'req2',
+            group: 'request',
+            label: '@RequestBody 逐一封装',
+            desc: '多参数映射',
+            method: 'POST',
+            defaultUrl: '/test02',
+            paramsType: 'json',
+            jsonExample: JSON.stringify({ username: 'lisi', age: 25, email: 'lisi@example.com' }, null, 2)
+        },
+        req3: {
+            id: 'req3',
+            group: 'request',
+            label: 'POJO 统一封装',
+            desc: '自动注入 JavaBean',
+            method: 'POST',
+            defaultUrl: '/test03',
+            paramsType: 'form',
+            formFields: [
+                { key: 'username', value: 'wangwu', placeholder: '用户名' },
+                { key: 'age', value: '22', placeholder: '年龄' },
+                { key: 'city', value: 'Beijing', placeholder: '城市' },
+            ]
+        },
+        req4: {
+            id: 'req4',
+            group: 'request',
+            label: '@RequestHeader',
+            desc: '获取请求头',
+            method: 'GET',
+            defaultUrl: '/test04',
+            paramsType: 'headers',
+            headersExample: [
+                { key: 'User-Agent', value: 'Mozilla/5.0' },
+                { key: 'X-Custom-Header', value: 'my-value' },
+            ]
+        },
+        req5: {
+            id: 'req5',
+            group: 'request',
+            label: '@CookieValue',
+            desc: '获取 Cookie',
+            method: 'GET',
+            defaultUrl: '/test05',
+            paramsType: 'cookies',
+            cookiesExample: [
+                { key: 'JSESSIONID', value: 'ABC123XYZ' },
+                { key: 'userPreference', value: 'dark-mode' },
+            ]
+        },
+        req6: {
+            id: 'req6',
+            group: 'request',
+            label: '级联封装复杂对象',
+            desc: '嵌套 POJO',
+            method: 'POST',
+            defaultUrl: '/test06',
+            paramsType: 'json',
+            jsonExample: JSON.stringify({
+                username: 'zhaoliu',
+                address: {
+                    province: 'Guangdong',
+                    city: 'Shenzhen',
+                    detail: 'Nanshan District'
+                },
+                hobbies: ['coding', 'reading']
+            }, null, 2)
+        },
+        req7: {
+            id: 'req7',
+            group: 'request',
+            label: '@RequestBody 封装 JSON',
+            desc: 'JSON 转对象',
+            method: 'POST',
+            defaultUrl: '/test07',
+            paramsType: 'json',
+            jsonExample: JSON.stringify({ id: 1001, name: 'Product A', price: 299.99 }, null, 2)
+        },
+        req8: {
+            id: 'req8',
+            group: 'request',
+            label: '文件上传',
+            desc: 'MultipartFile',
+            method: 'POST',
+            defaultUrl: '/test08',
+            paramsType: 'file',
+            fileFields: [
+                { key: 'file', placeholder: '选择文件' },
+                { key: 'description', value: '上传的图片', placeholder: '文件描述' },
+            ]
+        },
+        req9: {
+            id: 'req9',
+            group: 'request',
+            label: 'HttpEntity',
+            desc: '原始请求体+头',
+            method: 'POST',
+            defaultUrl: '/test09',
+            paramsType: 'httpentity',
+            jsonExample: JSON.stringify({ raw: 'data' }, null, 2),
+            headersExample: [
+                { key: 'Content-Type', value: 'application/json' },
+            ]
+        },
+        req10: {
+            id: 'req10',
+            group: 'request',
+            label: '原生 Servlet API',
+            desc: 'HttpServletRequest',
+            method: 'GET',
+            defaultUrl: '/test10',
+            paramsType: 'none',
+            info: '此实验无需特殊参数，直接发送即可查看原生请求信息。'
+        },
+        // ---------- 响应实验 ----------
+        resp1: {
+            id: 'resp1',
+            group: 'response',
+            label: '返回 JSON',
+            desc: '@ResponseBody',
+            method: 'GET',
+            defaultUrl: '/resp01',
+            paramsType: 'none',
+            info: '请求后将返回 JSON 格式数据。'
+        },
+        resp2: {
+            id: 'resp2',
+            group: 'response',
+            label: '文件下载',
+            desc: 'ResponseEntity<Resource>',
+            method: 'GET',
+            defaultUrl: '/resp02',
+            paramsType: 'form',
+            formFields: [
+                { key: 'filename', value: 'sample.pdf', placeholder: '要下载的文件名' },
+            ]
+        },
+        resp3: {
+            id: 'resp3',
+            group: 'response',
+            label: 'Thymeleaf 渲染',
+            desc: '服务端视图',
+            method: 'GET',
+            defaultUrl: '/resp03',
+            paramsType: 'none',
+            info: '返回 HTML 页面（需配置视图解析器）。'
+        }
+    };
+
+    // ============================================================
+    // 2. 渲染菜单
+    // ============================================================
+    function renderMenu() {
+        const reqContainer = document.getElementById('menuRequest');
+        const respContainer = document.getElementById('menuResponse');
+
+        const reqKeys = Object.keys(experiments).filter(k => experiments[k].group === 'request');
+        const respKeys = Object.keys(experiments).filter(k => experiments[k].group === 'response');
+
+        reqKeys.forEach(key => {
+            const exp = experiments[key];
+            const div = document.createElement('div');
+            div.className = 'menu-item';
+            div.dataset.key = key;
+            div.innerHTML = `
+                <span>${exp.label}</span>
+                <span class="badge">${exp.method}</span>
+            `;
+            div.addEventListener('click', () => selectExperiment(key));
+            reqContainer.appendChild(div);
+        });
+
+        respKeys.forEach(key => {
+            const exp = experiments[key];
+            const div = document.createElement('div');
+            div.className = 'menu-item';
+            div.dataset.key = key;
+            div.innerHTML = `
+                <span>${exp.label}</span>
+                <span class="badge">${exp.method}</span>
+            `;
+            div.addEventListener('click', () => selectExperiment(key));
+            respContainer.appendChild(div);
+        });
+
+        // 默认选中第一个
+        if (reqKeys.length) selectExperiment(reqKeys[0]);
+    }
+
+    // ============================================================
+    // 3. 选中实验 -> 渲染内容
+    // ============================================================
+    let currentKey = null;
+
+    function selectExperiment(key) {
+        currentKey = key;
+        const exp = experiments[key];
+        if (!exp) return;
+
+        // 更新菜单高亮
+        document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+        document.querySelector(`.menu-item[data-key="${key}"]`)?.classList.add('active');
+
+        // 更新面包屑
+        const groupName = exp.group === 'request' ? '请求测试' : '响应测试';
+        document.getElementById('breadcrumb').innerHTML =
+            `<span style="color:#64748b;">${groupName}</span> / <strong>${exp.label}</strong> <span style="color:#94a3b8;font-size:0.8rem;">${exp.desc}</span>`;
+
+        // 渲染请求面板
+        renderPanel(exp);
+    }
+
+    // ============================================================
+    // 4. 渲染面板 (根据 paramsType)
+    // ============================================================
+    function renderPanel(exp) {
+        const container = document.getElementById('dynamicContent');
+
+        // 构造基本布局：请求栏 + 参数区 + 发送按钮 + 响应区
+        let html = `
+            <div class="request-bar">
+                <select id="reqMethod">
+                    <option value="GET" ${exp.method === 'GET' ? 'selected' : ''}>GET</option>
+                    <option value="POST" ${exp.method === 'POST' ? 'selected' : ''}>POST</option>
+                    <option value="PUT" ${exp.method === 'PUT' ? 'selected' : ''}>PUT</option>
+                    <option value="DELETE" ${exp.method === 'DELETE' ? 'selected' : ''}>DELETE</option>
+                </select>
+                <input type="text" id="reqUrl" value="${exp.defaultUrl}" placeholder="请输入请求 URL (如 /api/test)" />
+            </div>
+            <div class="params-section" id="paramsContainer">
+        `;
+
+        // 根据类型渲染参数控件
+        switch (exp.paramsType) {
+            case 'form':
+                html += renderFormParams(exp.formFields || []);
+                break;
+            case 'json':
+                html += renderJsonParams(exp.jsonExample || '{}');
+                break;
+            case 'headers':
+                html += renderHeadersParams(exp.headersExample || []);
+                break;
+            case 'cookies':
+                html += renderCookiesParams(exp.cookiesExample || []);
+                break;
+            case 'file':
+                html += renderFileParams(exp.fileFields || []);
+                break;
+            case 'httpentity':
+                html += renderHttpEntityParams(exp.jsonExample || '{}', exp.headersExample || []);
+                break;
+            case 'none':
+            default:
+                html += `<div style="color:#475569;padding:0.5rem 0;">${exp.info || '此实验无需额外参数，直接发送即可。'}</div>`;
+                break;
+        }
+
+        html += `
+            </div>
+            <div class="action-bar">
+                <button class="btn-send" id="btnSend">🚀 发送请求</button>
+                <button class="btn-clear" id="btnClear">清空响应</button>
+            </div>
+            <div class="response-area" id="responseArea">
+                <div class="resp-header">
+                    <span class="resp-status" id="respStatus">状态码</span>
+                    <span class="resp-time" id="respTime">耗时</span>
+                </div>
+                <div class="resp-body" id="respBody">
+                    <span class="placeholder">等待发送请求…</span>
+                </div>
+            </div>
+        `;
+
+        container.innerHTML = html;
+
+        // 绑定发送事件
+        document.getElementById('btnSend').addEventListener('click', () => sendRequest(exp));
+        document.getElementById('btnClear').addEventListener('click', clearResponse);
+
+        // 对于表单，添加动态增减行功能
+        if (exp.paramsType === 'form' || exp.paramsType === 'headers' || exp.paramsType === 'cookies' || exp.paramsType === 'httpentity') {
+            const addBtn = document.querySelector('.btn-add-kv');
+            if (addBtn) {
+                addBtn.addEventListener('click', function(e) {
+                    const container = this.closest('.kv-container');
+                    const row = createKvRow();
+                    container.insertBefore(row, this);
+                });
+            }
+            // 删除按钮委托
+            container.querySelectorAll('.kv-container').forEach(cont => {
+                cont.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('btn-remove')) {
+                        const row = e.target.closest('.kv-row');
+                        if (row && row.parentElement.children.length > 2) { // 至少保留一行
+                            row.remove();
+                        } else {
+                            alert('至少保留一行参数');
+                        }
+                    }
+                });
+            });
+        }
+
+        // 文件上传显示文件名
+        const fileInput = document.querySelector('input[type="file"]');
+        if (fileInput) {
+            fileInput.addEventListener('change', function() {
+                const nameSpan = document.querySelector('.file-name');
+                if (nameSpan) {
+                    nameSpan.textContent = this.files.length ? this.files[0].name : '未选择文件';
+                }
+            });
+        }
+    }
+
+    // ---------- 辅助渲染函数 ----------
+    function renderFormParams(fields) {
+        let rows = fields.map(f => `
+            <div class="kv-row">
+                <input type="text" class="kv-key" value="${f.key}" placeholder="参数名" />
+                <input type="text" class="kv-value" value="${f.value}" placeholder="${f.placeholder || '值'}" />
+                <button class="btn-remove" type="button">✕</button>
+            </div>
+        `).join('');
+
+        return `
+            <div class="section-label">📝 表单参数 <span class="hint">(key=value)</span></div>
+            <div class="kv-container">
+                ${rows}
+                <button class="btn-add-kv" type="button">＋ 添加参数</button>
+            </div>
+        `;
+    }
+
+    function renderJsonParams(example) {
+        return `
+            <div class="section-label">📄 JSON 请求体 <span class="hint">(application/json)</span></div>
+            <textarea class="json-textarea" id="jsonBody">${example}</textarea>
+        `;
+    }
+
+    function renderHeadersParams(headers) {
+        let rows = headers.map(h => `
+            <div class="kv-row">
+                <input type="text" class="kv-key" value="${h.key}" placeholder="Header 名" />
+                <input type="text" class="kv-value" value="${h.value}" placeholder="Header 值" />
+                <button class="btn-remove" type="button">✕</button>
+            </div>
+        `).join('');
+
+        return `
+            <div class="section-label">📋 请求头 <span class="hint">(Headers)</span></div>
+            <div class="kv-container" id="headersContainer">
+                ${rows}
+                <button class="btn-add-kv" type="button">＋ 添加 Header</button>
+            </div>
+        `;
+    }
+
+    function renderCookiesParams(cookies) {
+        let rows = cookies.map(c => `
+            <div class="kv-row">
+                <input type="text" class="kv-key" value="${c.key}" placeholder="Cookie 名" />
+                <input type="text" class="kv-value" value="${c.value}" placeholder="Cookie 值" />
+                <button class="btn-remove" type="button">✕</button>
+            </div>
+        `).join('');
+
+        return `
+            <div class="section-label">🍪 Cookie <span class="hint">(键值对)</span></div>
+            <div class="kv-container" id="cookiesContainer">
+                ${rows}
+                <button class="btn-add-kv" type="button">＋ 添加 Cookie</button>
+            </div>
+        `;
+    }
+
+    function renderFileParams(fields) {
+        let extra = '';
+        if (fields.length > 1) {
+            extra = fields.filter(f => f.key !== 'file').map(f => `
+                <div style="display:flex;gap:0.5rem;align-items:center;margin-top:0.5rem;">
+                    <input type="text" id="fileExtra_${f.key}" value="${f.value}" placeholder="${f.placeholder}" style="flex:1;padding:0.4rem;border-radius:6px;border:1px solid #d1d9e6;" />
+                </div>
+            `).join('');
+        }
+        return `
+            <div class="section-label">📎 文件上传 <span class="hint">(multipart/form-data)</span></div>
+            <div class="file-upload-area">
+                <input type="file" id="fileInput" />
+                <span class="file-name">未选择文件</span>
+            </div>
+            ${extra ? `<div style="margin-top:0.5rem;">${extra}</div>` : ''}
+            <input type="hidden" id="fileFieldName" value="${fields.find(f => f.key === 'file')?.key || 'file'}" />
+        `;
+    }
+
+    function renderHttpEntityParams(jsonExample, headers) {
+        let headerRows = headers.map(h => `
+            <div class="kv-row">
+                <input type="text" class="kv-key" value="${h.key}" placeholder="Header 名" />
+                <input type="text" class="kv-value" value="${h.value}" placeholder="Header 值" />
+                <button class="btn-remove" type="button">✕</button>
+            </div>
+        `).join('');
+
+        return `
+            <div class="section-label">📦 HttpEntity <span class="hint">(请求体 + 请求头)</span></div>
+            <div style="margin-bottom:0.8rem;">
+                <div class="section-label" style="font-size:0.8rem;color:#475569;">请求头</div>
+                <div class="kv-container" id="httpHeadersContainer">
+                    ${headerRows}
+                    <button class="btn-add-kv" type="button">＋ 添加 Header</button>
+                </div>
+            </div>
+            <div>
+                <div class="section-label" style="font-size:0.8rem;color:#475569;">请求体 (JSON)</div>
+                <textarea class="json-textarea" id="httpEntityBody">${jsonExample}</textarea>
+            </div>
+        `;
+    }
+
+    // 创建一行 kv 行（用于动态添加）
+    function createKvRow(keyVal = { key: '', value: '' }) {
+        const div = document.createElement('div');
+        div.className = 'kv-row';
+        div.innerHTML = `
+            <input type="text" class="kv-key" value="${keyVal.key}" placeholder="参数名" />
+            <input type="text" class="kv-value" value="${keyVal.value}" placeholder="值" />
+            <button class="btn-remove" type="button">✕</button>
+        `;
+        return div;
+    }
+
+    // ============================================================
+    // 5. 发送请求
+    // ============================================================
+async function sendRequest(exp) {
+    const methodSelect = document.getElementById('reqMethod');
+    let method = methodSelect.value;
+    let url = document.getElementById('reqUrl').value.trim();
+    if (!url) {
+        alert('请输入请求 URL');
+        return;
+    }
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        url = window.location.origin + url;
+    }
+
+    const btn = document.getElementById('btnSend');
+    btn.disabled = true;
+    btn.textContent = '⏳ 发送中…';
+
+    try {
+        let body = null;
+        let headers = {};
+        let isFormData = false;
+        let queryParams = []; // 用于 GET 请求的查询参数
+
+        // 根据 paramsType 构建请求参数
+        switch (exp.paramsType) {
+            case 'form': {
+                const kvRows = document.querySelectorAll('#paramsContainer .kv-row');
+                const formData = new FormData();
+                kvRows.forEach(row => {
+                    const key = row.querySelector('.kv-key').value.trim();
+                    const val = row.querySelector('.kv-value').value;
+                    if (key) {
+                        formData.append(key, val);
+                        queryParams.push(`${encodeURIComponent(key)}=${encodeURIComponent(val)}`);
+                    }
+                });
+                // 如果是 GET/HEAD，不使用 body，改为拼接到 URL
+                if (method === 'GET' || method === 'HEAD') {
+                    body = null;
+                    if (queryParams.length) {
+                        url += (url.includes('?') ? '&' : '?') + queryParams.join('&');
+                    }
+                } else {
+                    body = formData;
+                    isFormData = true;
+                }
+                break;
+            }
+            case 'json': {
+                const textarea = document.getElementById('jsonBody');
+                let jsonData;
+                try {
+                    jsonData = JSON.parse(textarea.value);
+                } catch (e) {
+                    alert('JSON 格式错误，请检查');
+                    btn.disabled = false;
+                    btn.textContent = '🚀 发送请求';
+                    return;
+                }
+                if (method === 'GET' || method === 'HEAD') {
+                    // GET 不能有 body，将 JSON 转为查询参数（或提示）
+                    alert('GET 请求不支持 JSON body，请改用 POST 或 PUT');
+                    btn.disabled = false;
+                    btn.textContent = '🚀 发送请求';
+                    return;
+                }
+                headers['Content-Type'] = 'application/json';
+                body = JSON.stringify(jsonData);
+                break;
+            }
+            case 'headers':
+            case 'cookies': {
+                // Headers 和 Cookie 只影响请求头，无 body
+                const kvRows = document.querySelectorAll('#paramsContainer .kv-row');
+                if (exp.paramsType === 'headers') {
+                    kvRows.forEach(row => {
+                        const key = row.querySelector('.kv-key').value.trim();
+                        const val = row.querySelector('.kv-value').value;
+                        if (key) headers[key] = val;
+                    });
+                } else { // cookies
+                    let cookieStr = [];
+                    kvRows.forEach(row => {
+                        const key = row.querySelector('.kv-key').value.trim();
+                        const val = row.querySelector('.kv-value').value;
+                        if (key) cookieStr.push(`${key}=${val}`);
+                    });
+                    if (cookieStr.length) headers['Cookie'] = cookieStr.join('; ');
+                }
+                body = null; // GET/HEAD 无 body
+                break;
+            }
+            case 'file': {
+                if (method === 'GET' || method === 'HEAD') {
+                    alert('文件上传不支持 GET 请求，请改用 POST');
+                    btn.disabled = false;
+                    btn.textContent = '🚀 发送请求';
+                    return;
+                }
+                const fileInput = document.getElementById('fileInput');
+                const files = fileInput.files;
+                const formData = new FormData();
+                const fieldName = document.getElementById('fileFieldName')?.value || 'file';
+                if (files.length) {
+                    formData.append(fieldName, files[0]);
+                } else {
+                    alert('请选择一个文件');
+                    btn.disabled = false;
+                    btn.textContent = '🚀 发送请求';
+                    return;
+                }
+                document.querySelectorAll('#paramsContainer input[type="text"]').forEach(inp => {
+                    if (inp.id && inp.id.startsWith('fileExtra_')) {
+                        const key = inp.id.replace('fileExtra_', '');
+                        formData.append(key, inp.value);
+                    }
+                });
+                body = formData;
+                isFormData = true;
+                break;
+            }
+            case 'httpentity': {
+                if (method === 'GET' || method === 'HEAD') {
+                    alert('HttpEntity 请求体不支持 GET，请改用 POST');
+                    btn.disabled = false;
+                    btn.textContent = '🚀 发送请求';
+                    return;
+                }
+                // 收集 headers
+                const headerRows = document.querySelectorAll('#httpHeadersContainer .kv-row');
+                headerRows.forEach(row => {
+                    const key = row.querySelector('.kv-key').value.trim();
+                    const val = row.querySelector('.kv-value').value;
+                    if (key) headers[key] = val;
+                });
+                // 收集 body
+                const textarea = document.getElementById('httpEntityBody');
+                let jsonData;
+                try {
+                    jsonData = JSON.parse(textarea.value);
+                } catch (e) {
+                    alert('JSON 格式错误，请检查');
+                    btn.disabled = false;
+                    btn.textContent = '🚀 发送请求';
+                    return;
+                }
+                body = JSON.stringify(jsonData);
+                if (!headers['Content-Type']) headers['Content-Type'] = 'application/json';
+                break;
+            }
+            case 'none':
+            default:
+                body = null;
+                break;
+        }
+
+        // 如果 body 是 FormData，删除 Content-Type 让浏览器自动设置
+        if (isFormData) {
+            delete headers['Content-Type'];
+        }
+
+        const startTime = performance.now();
+
+        const response = await fetch(url, {
+            method: method,
+            headers: headers,
+            body: body,
+            credentials: 'include',
+        });
+
+        const endTime = performance.now();
+        const elapsed = (endTime - startTime).toFixed(0);
+
+        // 读取响应
+        let responseText = '';
+        const contentType = response.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+            const json = await response.json();
+            responseText = JSON.stringify(json, null, 2);
+        } else if (contentType.includes('text/') || contentType.includes('application/xml')) {
+            responseText = await response.text();
+        } else {
+            responseText = await response.text();
+        }
+
+        displayResponse(response.status, response.statusText, elapsed, responseText, response.headers);
+
+    } catch (error) {
+        alert('请求失败：' + error.message);
+        displayResponse(0, 'Error', '0', error.message, {});
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '🚀 发送请求';
+    }
+}
+    function displayResponse(status, statusText, time, body, headers) {
+        const statusEl = document.getElementById('respStatus');
+        const timeEl = document.getElementById('respTime');
+        const bodyEl = document.getElementById('respBody');
+
+        if (status >= 200 && status < 300) {
+            statusEl.className = 'resp-status good';
+        } else {
+            statusEl.className = 'resp-status bad';
+        }
+        statusEl.textContent = `${status} ${statusText}`;
+        timeEl.textContent = `⏱ ${time}ms`;
+
+        // 美化显示
+        let displayBody = body;
+        try {
+            // 如果是 JSON，再次格式化
+            const parsed = JSON.parse(body);
+            displayBody = JSON.stringify(parsed, null, 2);
+        } catch (e) { /* 保持原样 */ }
+
+        bodyEl.textContent = displayBody || '(空响应)';
+    }
+
+    function clearResponse() {
+        document.getElementById('respStatus').textContent = '状态码';
+        document.getElementById('respTime').textContent = '耗时';
+        document.getElementById('respBody').innerHTML = '<span class="placeholder">等待发送请求…</span>';
+    }
+
+    // ============================================================
+    // 6. 启动
+    // ============================================================
+    document.addEventListener('DOMContentLoaded', renderMenu);
+</script>
+</body>
+</html>
