@@ -1,14 +1,52 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
-<mapper namespace="com.sj.dao.EmpMapper">
-<!--
-  namespace 是 接口的全类名 , 代表 当前的xml文件和 com.sj.dao.EmpMapper 接口进行绑定
+<mapper namespace="com.sj.mapper.EmpMapper">
 
-  id 是 接口中方法的名字
-  resultType 是 返回值的类型, 把结果封装成什么类型
+    <!--
+        namespace 是 接口的全类名 , 代表 当前的xml文件和 com.sj.dao.EmpMapper 接口进行绑定
 
--->
+        id 是 接口中方法的名字
+        resultType 是 返回值的类型, 把结果封装成什么类型
+
+        # 告诉mybatis xml文件的位置 默认位置  classpath:mapper/**.xml
+        mybatis.mapper-locations=classpath:mapper/**.xml
+
+      -->
+
+    <!--
+       规范:
+       实体类 属性命名是 小驼峰
+       数据库 字段命名是  underscore(下划线)
+
+       问题: 导致不能正确封装到对应的 实体类属性
+       解决办法:
+       1. 通过 起别名的方式
+    -->
     <select id="selectById" resultType="com.sj.bean.Emp">
-        select * from emp where id = #{id}
+        SELECT id, emp_name empName, age, emp_salary empSalary
+        FROM t_emp
+        WHERE id = #{id}
     </select>
+
+    <insert id="insertEmp">
+<!--   传过来的是 emp对象, 这里直接通过 #{属性} 取值, 没有使用#{emp.id} 的方式     -->
+        INSERT INTO t_emp(id, emp_name, age, emp_salary)
+        VALUES(#{id}, #{empName}, #{age}, #{empSalary})
+    </insert>
+
+<!--
+根据id更新
+-->
+    <update id="updateEmpById">
+        UPDATE t_emp SET emp_name = #{empName}, age = #{age}, emp_salary = #{empSalary}
+        WHERE id = #{id}
+    </update>
+
+
+
+    <delete id="deleteEmpById">
+        DELETE FROM t_emp
+        WHERE id = #{id}
+    </delete>
+
 </mapper>
