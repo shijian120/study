@@ -28,7 +28,20 @@
         WHERE id = #{id}
     </select>
 
-    <insert id="insertEmp">
+
+    <select id="selectAllEmp" resultType="com.sj.bean.Emp">
+    	SELECT id, emp_name empName, age, emp_salary empSalary
+        FROM t_emp
+    </select>
+
+    <!--
+    useGeneratedKeys 告诉mybatis 使用自动生成的id
+    keyProperty 把生成的id值, 设置到 emp对象的id属性
+    上述是 自增id回填机制
+
+    解释, 接口传递的是 Emp 对象, 没有携带id, 当执行插入操作时, mybatis 会自动把生成的id, 设置到 emp对象的id属性
+    -->
+    <insert id="insertEmp" useGeneratedKeys="true" keyProperty="id">
 <!--   传过来的是 emp对象, 这里直接通过 #{属性} 取值, 没有使用#{emp.id} 的方式     -->
         INSERT INTO t_emp(id, emp_name, age, emp_salary)
         VALUES(#{id}, #{empName}, #{age}, #{empSalary})

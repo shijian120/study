@@ -2,8 +2,10 @@ package com.sj.mapper;
 
 import com.sj.bean.Emp;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
+import java.util.Map;
 
 /*
 传参形式                示例                              取值方式
@@ -23,20 +25,31 @@ getEmploy(@Param("id") Long id),        #{id}
 即便单个参数 最好也使用 @Param注解
  */
 
-// 告诉spring 这个mybatis操作数据库用的接口
-@Mapper
-public interface EmpMapper {
-	// 根据id查询员工
-	Emp selectById(Integer id);
-	// 更新员工信息
-	void updateEmpById(Emp emp);
 
-	// 添加员工信息
-	void insertEmp(Emp emp);
+
+// 参数测试
+@Mapper
+public interface EmpParamMapper {
 	
-	// 删除员工信息
-	void deleteEmpById(Integer id);
+	// 根据id查询员工
+	Emp selectEmpById(@Param("id") Long id);
 	
-	// 查询所有员工信息
-	List<Emp> selectAllEmp();
+	
+	Emp selectEmpByIds(@Param("ids") List<Long> ids);
+	
+	// 添加员工
+	void insertEmp(@Param("emp") Emp emp);
+	
+	
+	// 更新员工信息
+	// public void updateEmpById(Emp emp);
+	
+	
+	// 多个参数,通过 @Param 注解, 此时可以在 mapper xml 通过 指定的参数名, 拿到对应的值
+	void aaaEmploy(
+			@Param("id") Long id,
+			@Param("ext") Map<String, Object> m,
+			@Param("ids") List<Long> ids,
+			@Param("emp")Emp e
+			);
 }

@@ -38,29 +38,21 @@ public class MapperTest {
 	@Test
 	public void addEmp(){
 		Emp emp = new Emp();
-		emp.setEmpName("周杰伦");
-		emp.setAge(040);
+		emp.setEmpName("刘德华");
+		emp.setAge(18);
 		emp.setEmpSalary(1000.01D);
 		
 		empMapper.insertEmp(emp);
-	}
-	
-	
-	// 更新员工
-	@Test
-	public void updateEmp(){
-		Emp emp = new Emp();
-		emp.setId(1);
-		emp.setEmpName("周杰伦");
-		emp.setAge(040);
-		emp.setEmpSalary(1000.01D);
 		
-		empMapper.updateEmpById(emp);
+		// 获取添加后的员工id, 这里使用了自增id回填机制, 需要在 EmpMapper.xml 配置 keyProperty 属性
+		System.out.println(emp.getId());
 	}
+	
+	
 	
 	//更新员工
 	@Test
-	public void updateEmp2(){
+	public void updateEmp(){
 		
 		// 先查询,在更新
 		Emp emp = empMapper.selectById(4);
@@ -77,5 +69,11 @@ public class MapperTest {
 		empMapper.deleteEmpById(4);
 	}
 	
+	
+	// 查询所有
+	@Test
+	public void selectAllEmp(){
+		empMapper.selectAllEmp().forEach(System.out::println);
+	}
 	
 }
