@@ -5,28 +5,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.sj</groupId>
-    <artifactId>ssm-parent</artifactId>
+    <artifactId>mybatis-01-helloword</artifactId>
     <version>1.0-SNAPSHOT</version>
-
-<!--  父项目   -->
-    <packaging>pom</packaging>
-
-    <modules>
-        <module>spring-01-ioc</module>
-        <module>spring-02-aop</module>
-        <module>spring-03-tx</module>
-        <module>springmvc-01-hellowrod</module>
-        <module>springmvc-restful-crud</module>
-        <module>springmvc-02-best-practice</module>
-    </modules>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
-
-
-
 
 </project>
