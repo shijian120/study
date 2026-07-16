@@ -76,4 +76,5 @@ public class MapperTest {
 		empMapper.selectAllEmp().forEach(System.out::println);
 	}
 	
+	
 }

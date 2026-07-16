@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.Map;
 
 /*
+关于 @Param注解的使用
+
+
 传参形式                示例                              取值方式
 单个参数               getEmploy(Long id)                #{变量名}
 单个参数-list类型       getEmploy(List<Long> id)          #{变量名[0]}

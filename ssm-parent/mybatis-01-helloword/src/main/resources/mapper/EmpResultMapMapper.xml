@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sj.mapper.EmpResultMapMapper">
+
+<!--
+自定义结果集
+    明确告知 MP 如何映射字段和属性之间的对应关系
+
+-->
+    <resultMap id="empRM" type="com.sj.bean.Emp">
+        <id column="id" property="id" />
+        <result column="emp_name" property="empName"/>
+        <result column="age" property="age"/>
+        <result column="emp_salary" property="empSalary"/>
+    </resultMap>
+
+
+<!--
+    数据库中的字段和java对象的属性不一致时, 默认情况下是封装不上的
+    解决办法:
+
+    0. javabean 属性名 和 数据库中表的 列明一样
+        这种不现实, 因为2这规范不一样, java是 小驼峰, 表 是 下划线连接, 另外提一句, 创建项目是 中划线
+
+    1. 通过 写sql的时候 使用别名
+
+    2. 通过 开启 驼峰命名 (这种 数据库中的列明 和 java中的属性名 要保证 按照规范书写)
+
+    3. 通过 自定义 结果集 (resultMap)
+
+
+
+-->
+    <select id="selectEmpById" resultMap="empRM">
+        select * from t_emp where id = #{id}
+    </select>
+</mapper>
