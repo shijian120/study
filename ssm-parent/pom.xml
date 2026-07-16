@@ -18,6 +18,7 @@
         <module>springmvc-01-hellowrod</module>
         <module>springmvc-restful-crud</module>
         <module>springmvc-02-best-practice</module>
+        <module>mybatis-01-helloword</module>
     </modules>
 
     <properties>

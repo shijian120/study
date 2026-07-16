@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sj.dao.EmpMapper">
+<!--
+  namespace 是 接口的全类名 , 代表 当前的xml文件和 com.sj.dao.EmpMapper 接口进行绑定
+
+  id 是 接口中方法的名字
+  resultType 是 返回值的类型, 把结果封装成什么类型
+
+-->
+    <select id="selectById" resultType="com.sj.bean.Emp">
+        select * from emp where id = #{id}
+    </select>
+</mapper>
