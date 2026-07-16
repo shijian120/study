@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sj.mapper.OrderMapper">
+
+
+    <select id="selectById" resultType="com.sj.bean.Order">
+        select * from t_order where id = #{id}
+    </select>
+
+
+    <!--
+      这么写是没有问题的, 但是 MP 查询到数据后, 是不知道如何封装的, 需要我们自己封装
+    -->
+    <resultMap id="OrderRM" type="com.sj.bean.Order">
+        <id property="id" column="id"/>
+        <result property="customerName" column="customer_name"/>
+        <result property="phone" column="phone"/>
+        <result property="customerId" column="customer_id"/>
+        <!-- 封装对象属性, customer, 要告诉MP customer是什么类型的,通过javaType指定  -->
+        <association property="customer" javaType="com.sj.bean.Customer">
+            <!--
+                这里数据库的 列是 c_id, 对应java对象 Customer 的属性id
+                其实 数据库表 Customer属性也 不叫 c_id , 但是我们查询语句中, 给表 t_customer 起了一个别名叫做 c
+                查询他属性的时候 是通过 别名.列名 的方式 查询的.
+             -->
+            <id property="id" column="c_id"/>
+            <result property="customerName" column="customer_name"/>
+            <result property="phone" column="phone"/>
+        </association>
+    </resultMap>
+    <select id="selectByIdWithCustomer" resultMap="OrderRM ">
+        SELECT o.*, c.id,c.customer_name, c.phone
+        FROM t_order o
+        LEFT JOIN t_customer c
+        ON o.customer_id = c.id
+        WHERE o.id = #{id}
+    </select>
+
+
+</mapper>

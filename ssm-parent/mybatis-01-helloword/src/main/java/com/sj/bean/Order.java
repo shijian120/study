@@ -24,4 +24,7 @@ public class Order {
 	// 客户表和订单表存在一对多的关系, 关联关系存储在多的一方
 	private Long customerId;
 	
+	// 这个属性就是订单对应客户的信息
+	private Customer customer;
+	
 }

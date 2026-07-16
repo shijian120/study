@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sj.mapper.CustomerMapper">
+
+
+    <!--   开启了驼峰,不需要自定义结果集-->
+    <select id="selectById" resultType="com.sj.bean.Customer">
+        select * from customer where id = #{id}
+    </select>
+
+    <!--
+    按照id查询客户,已经客户的所有订单, 注意,下面的sql 会查询到多条数据
+    -->
+    <resultMap id="customerRM" type="com.sj.bean.Customer">
+        <!-- 引用 SQL 里的别名 c_id -->
+        <id property="id" column="c_id"/>
+        <result property="customerName" column="customer_name"/>
+        <result property="phone" column="phone"/>
+
+        <!--
+            ofType 用来说明集合中元素的类型
+         -->
+
+        <collection property="orders" ofType="com.sj.bean.Order">
+            <!-- 引用 SQL 里的别名 o_id -->
+            <id property="id" column="o_id"/>
+            <result property="address" column="address"/>
+            <result property="amount" column="amount"/>
+            <result property="customerId" column="customer_id"/>
+        </collection>
+    </resultMap>
+
+
+    <select id="selectByIdWithOrders" resultMap="customerRM">
+        SELECT
+        c.id AS c_id,
+        c.customer_name,
+        c.phone,
+        o.id AS o_id,
+        o.address,
+        o.amount,
+        o.customer_id
+        FROM t_customer AS c
+        LEFT JOIN t_order AS o ON c.id = o.customer_id
+        WHERE c.id = #{id}
+    </select>
+</mapper>
