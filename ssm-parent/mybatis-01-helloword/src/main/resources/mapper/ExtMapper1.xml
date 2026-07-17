@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sj.mapper.ext.ExtMapper1">
+
+    <!--开启一级缓存-->
+    <cache/>
+
+    <select id="selectById" resultType="com.sj.bean.Emp">
+        select id,emp_name,age from t_emp where id = #{id}
+    </select>
+
+<!--    查询所有员工-->
+    <select id="selectAllByPage" resultType="com.sj.bean.Emp">
+        select id,emp_name,age,emp_salary from t_emp
+    </select>
+</mapper>

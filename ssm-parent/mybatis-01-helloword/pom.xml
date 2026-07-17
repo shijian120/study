@@ -29,6 +29,14 @@
 
 
     <dependencies>
+        <!-- Source: https://mvnrepository.com/artifact/com.github.pagehelper/pagehelper -->
+        <dependency>
+            <groupId>com.github.pagehelper</groupId>
+            <artifactId>pagehelper</artifactId>
+            <version>6.1.1</version>
+            <scope>compile</scope>
+        </dependency>
+
         <!--        导入jdbc-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
