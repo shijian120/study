@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sj.mapper.StepMapper">
+    <select id="selectCustomerById" resultType="com.sj.bean.Customer">
+        select * from t_customer where id = #{id}
+    </select>
+    <select id="selectOrdersByCustId" resultType="com.sj.bean.Order">
+        select * from `t_order` where customer_id = #{custId}
+    </select>
+
+
+
+
+
+    <resultMap id="CustomerOrderStepRM" type="com.sj.bean.Customer">
+        <id column="id" property="id"/>
+        <result column="customer_name" property="customerName"/>
+        <result column="phone" property="phone"/>
+        <collection property="orders" ofType="com.sj.bean.Order"
+                    select="com.sj.mapper.StepMapper.selectOrdersByCustId"
+                    column="id"
+        />
+<!--
+ collection的   select 应该写全名 com.sj.mapper.StepMapper
+
+ column=id 的意思是 将 上面的 列为 id的 值传给 下面的 selectOrdersByCustId 方法
+
+ column={cid=id,name=customer_name} 这个是多个参数的写法
+ 解释: 如果 selectOrdersByCustId 方法需要2个参数, 我们第一步就需要 将2个参数传递个 这个方法
+ 这个 selectOrdersByCustId方法 应该是通过 @Param("cid") 和 @Param("name") 来接受参数的
+ 此时我们这么写 column={cid=id,name=customer_name} 的意思就是, 将 列是id的传给 cid, 将 customer_name 传递给 name
+-->
+    </resultMap>
+    <select id="selectCustomerAndOrders" resultMap="CustomerOrderStepRM">
+        select * from t_customer where id = #{id}
+    </select>
+    <!--
+        总结, 这个 MP的分步实现, 整理下逻辑
+        需求: 根据id 查询用户信息,以及他所有的订单
+        1. 先根据 id 查询到用户信息
+        2. 但是我们使用了 自定义结果封装
+        3. 在封装的时候,orders的时候, 启动了第二次查询
+        4. 通过 调用另一个 sql, 也就是  com.sj.mapper.StepMapper.selectOrdersByCustId 方法来实现的
+        5. com.sj.mapper.StepMapper.selectOrdersByCustId 方法 又需要一个参数
+        6. 这个参数是通过 column=id, 意思就是 上面 列为id的值,传递给 selectOrdersByCustId方法, 去执行查询订单的方法
+
+       这种分步查询和我们 原生的分步查询 对比
+       1. 原生的分步查询 逻辑简单, 但是需要调用2个方法, 相当于 建立了2次链接 与 数据库的 连接, 效率低下
+       2. MP的分步查询 也是2次查询,但是 他只是建立了一次 连接与数据库的 连接, 效率较高(底层做了优化)
+
+
+    -->
+
+
+
+<!--
+    按照id查询订单,已经下单的客户
+   	Order selectOrderAndCustomer(Long id);
+   -->
+    <resultMap id="OrderAndCustomerRM" type="com.sj.bean.Order">
+        <id column="id" property="id"/>
+        <result column="address" property="address"/>
+        <result column="amount" property="amount" />
+        <result column="customer_id" property="customerId" />
+        <association property="customer" javaType="com.sj.bean.Customer"
+            select="com.sj.mapper.StepMapper.selectCustomerById"
+            column="customer_id"
+        />
+
+    </resultMap>
+    <select id="selectOrderAndCustomer" resultMap="OrderAndCustomerRM">
+        select * from t_order where id = #{id}
+    </select>
+
+
+</mapper>
