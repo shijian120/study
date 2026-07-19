@@ -1,0 +1,18 @@
+spring:
+  profiles:
+    include:
+      - route
+  application:
+    name: gateway
+  cloud:
+    nacos:
+      server-addr: 127.0.0.1:8848
+
+
+# 网关配置80端口，这个是有讲究的，因为80端口可以不写
+# 因此访问网关就是 localhost 如果以后想访问其他服务，只需要localhost/api/order
+# 就知道访问的是 订单服务
+server:
+  port: 80
+
+

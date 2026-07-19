@@ -1,0 +1,39 @@
+spring:
+    cloud:
+        openfeign:
+            client:
+                config: # 客户端配置
+                    # 默认配置，公共配置
+                    # 如果有多个 feign 的客户端,  这个default 就是配置 公共配置的地方
+                    default:
+                        loggerLevel: full
+                        connectTimeout: 5000   # 连接超时(连接注册中心的超时时间)
+                        readTimeout: 5000     # 读取超时
+
+                    # 这个是客户端的名字，其实就是 feign包下的@FeignClient(value = "service-product") 中的名字
+                    # 其实可以通 contextId 来指定，@FeignClient(value = "service-product",contextId = "service-product")
+                    # 此时下面的配置，就是配置 service-product 的客户端了
+                    service-product:
+                        connectTimeout: 5000   # 连接超时 默认是 10s
+                        readTimeout: 5000     # 读取超时 默认是 60s
+#                         retryer: feign.Retryer.Default
+                    # 这个请求拦截器,我们直接注入到了 ioc中, 因此可以不用配置
+                    # 如果 没有注入ioc 可以在这里配置
+        #            requestInterceptors:
+        #              - com.sj.interceptor.XTokenFeignInterceptor  #请求拦截器
+
+
+
+logging:
+    level:
+        com.sj.feign: debug
+
+
+# 开启 feign 的日志记录
+# 兜底返回需要配合下面的配置,
+feign:
+    sentinel:
+        enabled: true
+
+
+

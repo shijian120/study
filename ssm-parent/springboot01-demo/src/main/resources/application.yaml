@@ -1,9 +1,10 @@
 spring:
   application:
     name: springboot01-demo
-  banner:
-    location: classpath:/banner.txt
+
+
 cat:
   name: 汤姆
   age: 5
-
+server:
+  port: 9001
