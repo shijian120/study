@@ -1,0 +1,37 @@
+# 容器的资源限制
+
+# 查看 k8s 中 所有的资源
+# kubectl api-resources
+
+
+# 使用metrics-server 来查看  pod 和 node 的资源情况, 但是默认情况下他没有安装
+
+
+# 安装 metrics-server
+# kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+
+# minkube 安装
+# minikube addons enable metrics-server
+
+
+
+# kubectl top pod pod-resource
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-resource
+spec:
+  containers:
+    - name: nginx
+      image: nginx:1.19
+      # 资源设置
+      resources:
+        # 可以使用的基础的资源, 可以理解为 最小值
+        requests:
+          memory: "64Mi"
+          cpu: "250m"    # 0.25 核
+        #  可以使用的 最大的资源,超过最大资源, 容器会被杀死, 会出现OOM
+        limits:
+          memory: "128Mi"
+          cpu: "500m"    # 0.5 核

@@ -1,0 +1,86 @@
+# nodeAffinity 节点的亲和性
+# 节点的亲和性, 就是 pod 更倾向调度到那个节点上
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nodeAffinity01
+  labels:
+    role: nodeAffinity01
+spec:
+  containers:
+    - name: nodeAffinity01
+      image: nginx
+      imagePullPolicy: IfNotPresent
+      ports:
+        - containerPort: 80
+          protocol: TCP
+  # 亲和性
+  affinity:
+    # 节点亲和性. 还是 pod 间的亲和性 使用的是 podAffinity
+    nodeAffinity:
+      # 调度前必须满足
+      requiredDuringSchedulingIgnoredDuringExecution:
+        # 节点选择项列表
+        nodeSelectorTerms:
+          # 匹配表达式
+          - matchExpressions:
+              # 标签的 key
+              - key: disk
+                # 操作符 In, NotIn, Exists, DoesNotExist, Gt, Lt
+                operator: In
+                # 标签的值
+                values:
+                  - ssd
+  restartPolicy: Always
+
+# 整体的意思其实就是找 到一个 node, 他必须要满足 key: disk, value: ssd 的节点才能调度成功
+# 这种写法 类似于前面写的 nodeSelector, 只是更灵活一些, 可以指定多个 key
+# 如果 operator: NotIn 其实就是 反亲和性
+
+
+---
+# 偏好调度
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nodeAffinity02
+  labels:
+    role: nodeAffinity02
+spec:
+  containers:
+    - name: nodeAffinity02
+      image: nginx
+      imagePullPolicy: IfNotPresent
+      ports:
+        - containerPort: 80
+          protocol: TCP
+  # 亲和性
+  affinity:
+    nodeAffinity:
+      # 偏好调度, 不是必须的
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - preference:
+            matchExpressions:
+              - key: disk
+                operator: In
+                values:
+                  - ssd
+          # 取值范围 1 - 100, 数值越高越优先
+          # 有权重概念,是因为可以写多个 偏好的调度,
+          # 如果都1个节点满足 disk: ssd,
+          # 另一个节点满足, net: 10G, 1G 那么会根据 权重 进行调度
+          # 如果光写 一个 preference, 其实权重的意义就不大了
+          weight: 10
+
+        - preference:
+            matchExpressions:
+              - key: net
+                operator: In
+                values:
+                  - 10G
+                  - 1G
+          weight: 50
+---
+
+

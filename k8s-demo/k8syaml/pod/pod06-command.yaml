@@ -1,0 +1,91 @@
+# 自定义容器的启动命令
+# 在docker中, 我们可以修改容器的启动命令, 使用 --entrypoint 参数
+# 在pod中, 我们也可以修改容器的启动命令, 使用 command 属性
+
+
+## 测试之前,先将 redis 镜像加载到 minikube 中
+# minikube image load redis:7.4.2-bookworm
+
+# 执行
+#  kubectl apply -f pod/pod06-command.yaml
+
+# 查看 pod
+#kubectl get pods
+
+
+
+
+
+
+
+## 这种通过pod的方式,就是默认使用 redis,没有修改启动命令
+apiVersion: v1
+kind: Pod
+metadata:
+  name: redis01
+  labels:
+    app: redis
+spec:
+  containers:
+    - name: redis
+      image: redis:7.4.2-bookworm
+      imagePullPolicy: IfNotPresent
+  restartPolicy: Always
+
+
+---
+
+## 修改容器的启动命令  方式1 推荐
+apiVersion: v1
+kind: Pod
+metadata:
+  name: redis02
+  labels:
+    app: redis
+spec:
+  containers:
+    - name: redis
+      image: redis:7.4.2-bookworm
+      command: ["redis-server"]           # 用来指定启动命令
+      args: ["--appendonly yes"]          # 用来为启动命令传递参数
+      imagePullPolicy: IfNotPresent
+  restartPolicy: Always
+
+
+---
+# 方式2 , 直接通过 args 指定
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: redis03
+  labels:
+    app: redis
+spec:
+  containers:
+    - name: redis
+      image: redis:7.4.2-bookworm
+      args: ["redis-server", "--appendonly yes"]          # 单独使用修改启动命令并传递参数
+      imagePullPolicy: IfNotPresent
+  restartPolicy: Always
+
+
+---
+
+# 方式3 通过 yaml 的写法
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: redis04
+  labels:
+    app: redis
+spec:
+  containers:
+    - name: redis
+      image: redis:7.4.2-bookworm
+      args:                                  # 另一种语法格式
+       - redis-server
+       - "--appendonly yes"
+      imagePullPolicy: IfNotPresent
+  restartPolicy: Always

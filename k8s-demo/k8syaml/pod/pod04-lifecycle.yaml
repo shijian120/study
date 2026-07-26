@@ -1,0 +1,32 @@
+# 容器的生命周期回调,
+# postStart  容器启动之后(但是真实情况不是在启动之后,他是并发的)
+# preStop (容器停止之前)
+
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: lifecycle-demo  # 生命周期的模版
+  labels:
+    app: demo
+spec:
+  # 容器的说明
+  containers:
+    - name: nginx
+      image: nginx:1.25-alpine
+      ports:
+        - containerPort: 80
+      # 生命周期钩子
+      lifecycle:
+        # 容器创建时执行(是并发的,不能保证容器创建成功后,还是容器创建中执行)
+        # 容器 running 状态之后执行
+        postStart:
+          exec:
+            command: ["/bin/sh", "-c", "echo 'Container started at $(date)' > /tmp/startup.log && echo 'PostStart executed'"]
+        # 容器停止前执行,必须容器停止后执行
+        # terminating 信号之前执行
+        preStop:
+          exec:
+            command: ["/bin/sh", "-c", "nginx -s quit; sleep 5; echo 'preStop completed'"]
+    # 重启策略
+  restartPolicy: Always

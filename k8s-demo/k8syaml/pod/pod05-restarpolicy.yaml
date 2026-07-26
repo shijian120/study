@@ -1,0 +1,37 @@
+# 容器的重启策略
+# 虽然叫做 容器的重启策略,但是 restartPolicy 和 containers 是一个层级的
+# 相当于 Pod中所有的容器的重启策略
+
+# 重启策略有以下三种
+# Always: 无论什么情况都会重启容器,默认值
+# OnFailure: 当容器退出码不为0时才重启
+# Never: 不论什么情况都不会重启容器
+
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: lifecycle-demo  # 生命周期的模版
+  labels:
+    app: demo
+spec:
+  # 容器的说明
+  containers:
+    - name: nginx
+      image: nginx:1.25-alpine
+      ports:
+        - containerPort: 80
+      # 生命周期钩子
+      lifecycle:
+        # 容器创建时执行(是并发的,不能保证容器创建成功后,还是容器创建中执行)
+        # 容器 running 状态之后执行
+        postStart:
+          exec:
+            command: ["/bin/sh", "-c", "echo 'Container started at $(date)' > /tmp/startup.log && echo 'PostStart executed'"]
+        # 容器停止前执行,必须容器停止后执行
+        # terminating 信号之前执行
+        preStop:
+          exec:
+            command: ["/bin/sh", "-c", "nginx -s quit; sleep 5; echo 'preStop completed'"]
+    # 重启策略
+  restartPolicy: Always

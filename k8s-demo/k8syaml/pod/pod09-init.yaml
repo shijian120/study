@@ -1,0 +1,43 @@
+# pod中的 init 容器
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: init-pod
+spec:
+  # 共享卷，Init 容器和主容器都能访问
+  volumes:
+    - name: shared-data
+      emptyDir: {}
+
+  # init 容器, 在普通容器启动之前执行
+  initContainers:
+    - name: init-wait
+      image: busybox:1.28
+      # 这里使用到了 linux的命令
+      # sh -c  "命令的字符串形式", 如果不使用 -c , sh shell文件才是正确用法
+      # until 是shell中的循环, 和 while相反
+      command: ['sh', '-c', 'until nc -z mydatabase 3306; do echo waiting for db; sleep 2; done;']
+      # Init 容器也可以挂载卷
+      volumeMounts:
+        - name: shared-data
+          mountPath: /pod-data
+    # 第二个 init 容器, 逐个执行
+    - name: init-config
+      image: busybox:1.28
+      command: ['sh', '-c', 'echo "DATABASE_URL=mysql://user:pass@mydatabase:3306/db" > /pod-data/config.env']
+      volumeMounts:
+        - name: shared-data
+          mountPath: /pod-data
+
+  # 普通容器
+  containers:
+    - name: myapp
+      image: myapp:latest
+      volumeMounts:
+        - name: shared-data
+          mountPath: /config
+      # env 变量
+      env:
+        - name: CONFIG_FILE
+          value: /config/config.env

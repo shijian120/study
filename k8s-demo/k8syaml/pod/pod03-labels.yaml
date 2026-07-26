@@ -1,0 +1,39 @@
+# 给pod 加标签
+
+# 标签是附加到 k8s 资源对象上的键值对，可用于组织和管理资源
+# 标签的作用: 用于选择器（selector），可以精确的找到你需要的对象
+
+apiVersion: v1
+kind: Pod
+metadata:
+  # pod的名称
+  name: nginx-pod
+  labels:
+    # 键值对，可自定义
+    role: title
+spec:
+  containers:
+    - name: title
+      image: nginx:1.19
+      imagePullPolicy: IfNotPresent
+      ports:
+        - containerPort: 80
+          protocol: TCP
+  restartPolicy: Always
+
+
+# 查看标签, 查看pod的标签
+# kubectl get pod --s how-labels
+
+# 给pod 动态添加标签
+# nginx-pod 是pod的名称
+#  kubectl label pod nginx-pod role=main
+
+# 删除标签
+# role- 的意思就是 删除 key是 role的 标签
+# kubectl label pod nginx-pod role-
+
+
+# 筛选pod  -l 就是 label
+# 查询pod ,并且筛选 出 只有标签 key是 role, value是 main 的pod
+#kubectl0 get pod -l role=main
