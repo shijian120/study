@@ -1,0 +1,55 @@
+# 扩缩
+
+# 查看副本  kubectl get  rs|replicaset    
+# 因为 deployment和 replicaset 和并了, 因此也可以 只查看副本的信息
+
+# 扩缩  将副本扩容到6个
+#kubectl scale deployment nginx-deployment --replicas=6
+
+#更推荐的做法其实是 修改 yaml文件 的副本数量, 然后执行  kubectl apply -f xxx.yaml  进行更新
+# 这样做能够保证 更好的版本控制,以及 如果其他人 或者其他环境 部署这个应用 也方便, 直接把 yaml文件传过去即可
+
+
+
+#问题? 不会出现端口冲突吗?
+# 答: 不会, 因为 这6个pod 都运行在自己的容器中, 而且我们没有对外暴露nginx ,相当于 没有做端口映射,因此不会出现冲突
+# 因此现在的 服务其实也是无法从外部访问的. 之后会说暴露
+
+
+
+apiVersion: apps/v1
+# 说明这是一个 Deployment 控制器
+kind: Deployment
+# Deployment 控制器的基本元信息
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+# Deployment 控制器的规格定义
+spec:
+  # 副本数是3
+  replicas: 3
+  # 选择器
+  selector:
+    # 根据标签选择
+    matchLabels:
+      # 选择具有标签 app: nginx pod的资源, 其实就是要和 template中指定的标签对应上,才是选择对应的pod
+      app: nginx111
+  # 模板用于描述它所管理的 pod ,这个就是之前中pod中的写法
+  template:
+    metadata:
+      # pod的名字, 可以不写,因为如果部署多个pod 名字的意义不大
+      name: nginx01
+      # pod的标签, 上面 选择的资源的标签就是这个
+      labels:
+        app: nginx111
+    # pod的规格定义, 这里就是之前pod的定义写法
+    spec:
+      containers:
+        - name: nginx001
+          image: nginx:1.19
+          ports:
+            - containerPort: 80
+          # pod的重启策略,这里不写 默认就是这个值
+      restartPolicy: Always
+
