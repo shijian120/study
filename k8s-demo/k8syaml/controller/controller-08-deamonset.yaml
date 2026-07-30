@@ -1,101 +1,27 @@
-# 关于 数据存储的 的详细部署
+## daemonSet  每个节点运行一个pod     日志收集,集群监控
 
-# 假设我们有一个 k8s 集群,  1个主节点, 2个 worker 节点
-# 现在我们要部署一个有状态的应用, 我们要怎么写呢 ?
-# 首先我们应该创建一个目录 mkdir -p /tmp/my-data  ,让这个目录作为k8s存储数据的地方
-# 但是这么写其实是有问题的, 因为 pod 部署到那个节点其实是有k8s 控制的, 我们其实不知道 k8s 会将我们的有状态的服务,部署到那个节点
-# 此时如果我们 10个 k8s的 工作节点, 那么我们就需要在 10台机器上都执行 mkdir -p /tmp/my-data
-# 这样其实很麻烦, 所以 k8s 提供了 StorageClass 和 PersistentVolume 的概念. 这个概念我们后续在说
-
-# 首先我们顶一个 pv  即 持久化卷
-# 这个其实就是说, 我们这个集群, 就是说这个 /tmp/my-data 目录, 就是我们的持久化目录了, 我们这个 pv 就是说, 将这个目录暴露给需要的 pod 使用
-# 但是 工作节点是有多个的, 因此我们应该在 多个工作节点都部署一下这个 pv
-# 但是如果 pod 宕机了, k8s 在一个新的节点 启动了, 此时新的节点是 找不到 这个 pv 的, 因为 pv 是绑定到节点的
-#  例如: 我们在 worker1 节点 启动了一个 mysql 此时数据都存储在了 worker1节点, 当 mysql这个pod 此时宕机
-#  k8s 将 mysql又调度到了 worker2上, 此时之前的数据还在 worker1中, 虽然没有丢失, 但是之前的数据就不好找了
-
-apiVersion: v1
-# 这个其实指定的是 资源的类型
-kind: PersistentVolume
-metadata:
-  # pv 的名字
-  name: manual-pv
-spec:
-  capacity:
-    storage: 1Gi
-  accessModes:
-    - ReadWriteOnce
-  hostPath:
-    # 说明地址是 当前机器的 目录
-    path: /tmp/my-data  # 就是刚才建的文件夹
-
-# 有了这个 pv,就是在 statfulset 中,指定使用这个pv
+##  daemonSet 和 deployment 其实差不多,没什么说的, 就是每个节点运行一个, 不能指定副本
 
 
----
-# 引出 StorgeClass
-# 为了解决“每次都要手动创建 PV”的麻烦，Kubernetes 设计了 StorageClass（存储类）。
-
-# StorgeClass 是什么, 其实就是解决上述问题的
-# 执行下面命令就可以创建一个 StorgeClass
-# kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/master/deploy/local-path-storage.yaml
-# 在这个文件local-path-storage.yaml指定了 数据应该存储在哪里,例如 目标服务的的网络地址等,因为是本地存储, 因此这个文件应该指定本地存储的位置
-
----
-# 之后我就不用pv了 ,而是通过 pvc(声明) 直接告诉 k8s 我们的需要多大的存储空间,但是 要指定storageClassName: "local-path"
-# 告诉k8s 我们用 什么 storageClass , 此时k8s 会去根据 storageClass 自动的创建 pv 将数据存储到里面去,省去了我们自己手动创建pv
 apiVersion: apps/v1
-kind: StatefulSet
+kind: DaemonSet
 metadata:
-  name: web
+  name: daemonSetDemo
 spec:
-  serviceName: "nginx-svc"        # 【必填】必须存在，且必须提前创建好对应的 Service
-  replicas: 3
   selector:
     matchLabels:
-      app: nginx
+      app: daemonSetDemo
   template:
     metadata:
       labels:
-        app: nginx
+        app: daemonSetDemo
     spec:
       containers:
-        - name: nginx
-          image: nginx:latest
-          volumeMounts:
-            - name: data              # 【必须匹配】这里引用 volumeClaimTemplates 里的 metadata.name
-              # 容器中要存储数据的目录
-              mountPath: /usr/share/nginx/html
-  # 在这里 没有指定用什么 pv ,知识做了声明, 至于pv 怎么创建, 交给了k8s来做
-  volumeClaimTemplates:           # 你写的这部分完全正确
-    - metadata:
-        name: data
-      spec:
-        accessModes: [ "ReadWriteOnce" ]
-        # 关键字段, 使用什么 storageClass 来提供 pv
-        storageClassName: "local-path"
-        resources:
-          requests:
-            storage: 1Gi
-
-
----
-# 上述其实都是在本地存储, 还是比较简单的
-# 但是如果是将 数据存储 nfs 或这 阿里云上, 那么问题就又复杂了
-# 首先我们要告诉 k8s 数据应该存储到 哪里, 需要指定 对应 provisioner,
-# provisioner也是一个yaml文件, 可以理解为他就是pod , 当我们有状态的应用了产生了数据,他能够将数据 存储到 nfs上或者阿里云上
-# 此时就需要 这个 provisioner 要具有操作k8s权限, 因此还需要一个 rbac.yaml 来赋予其权限
-# k8s 实现了 基于角色的权限访问, 和基于资源的权限访问
-# 因此只有 provisioner 有权限, 才能 去创建 pv, 才能 将数据 存储到 nfs上或者阿里云上
-# 简单来说就是 provisioner 要调用 k8s 的api, 要知道将那些pod的那些数据 存储到 nfs上或者阿里云上,因此需要有权限
-# provisioner 其实就是一个pod
-
-
-
----
-
-##  总结
-## 本地存储数据, 但是 pod 会飘移, 导致数据丢失, 但worker1节点的pod除了问题, k8s在 worker2上部署pod 导致数据丢失
-## 因此引出了 StorgeClass, 通过 pvc 声明使用 那个 StorgeClass 来保证 k8s 到了新节点重新调度pod时, 也能将数据挂载到新节点的pv上
-## storgeClass 解决的是, 需要我们在每个节点都指定 pv
-
+        - name: busybox
+          image: busybox
+          args:
+            - /bin/sh
+            - -c
+            - 'while true; do ping -c 4 8.8.8.8; sleep 60; done'
+            
+            

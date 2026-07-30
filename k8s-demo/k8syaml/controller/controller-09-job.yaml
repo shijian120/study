@@ -1,27 +1,32 @@
-## daemonSet  每个节点运行一个pod     日志收集,集群监控
+# job 一次性运行, 运行完成job 就是结束了
 
-##  daemonSet 和 deployment 其实差不多,没什么说的, 就是每个节点运行一个, 不能指定副本
+# job 一般做
+#    - 数据迁移
+#    - 数据库备份
+#    - 备份恢复
+#    - 镜像构建
 
 
-apiVersion: apps/v1
-kind: DaemonSet
+# 固定写法
+apiVersion: batch/v1
+# 资源种类
+kind: Job
 metadata:
-  name: daemonSetDemo
+  # 资源名称
+  name: pi
 spec:
-  selector:
-    matchLabels:
-      app: daemonSetDemo
+  # 20s 后自动删除, 因为job是一次性任务, 可以让他运行完成后自动删除
+  ttlSecondsAfterFinished: 20
+  # pod 模板
   template:
-    metadata:
-      labels:
-        app: daemonSetDemo
     spec:
       containers:
-        - name: busybox
-          image: busybox
-          args:
-            - /bin/sh
-            - -c
-            - 'while true; do ping -c 4 8.8.8.8; sleep 60; done'
-            
-            
+        - name: pi
+          image: perl:5.34.0
+          command: ["perl",  "-Mbignum=bpi", "-wle", "print bpi(2000)"]
+      restartPolicy: Never
+  # 重试次数, 最大重试次数
+  backoffLimit: 4
+
+
+
