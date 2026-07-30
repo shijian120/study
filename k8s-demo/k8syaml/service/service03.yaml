@@ -1,0 +1,76 @@
+# 真正的写法, 但是不是最终写法, service应该是 deployment一起使用
+
+# 首先有有一个pod
+
+apiVersion: v1
+# 定义资源种类
+kind: Pod
+# 元数据信息
+metadata:
+  # 资源名称, 就是pod的名称
+  name: nginx1
+  # 规格信息, 对pod预期行为的规约
+  # 给pod 打一个标签, 好让 service可以选择这个pod
+  labels:
+    app: nginx1
+spec:
+  # 容器列表(1个pod可以管理多个容器)
+  containers:
+    # 容器的名字
+    - name: nginx
+      # 容器使用的镜像
+      image: nginx:1.19
+      # 容器暴露的 端口信息
+      ports:
+        # 容器端口
+        - containerPort: 80
+
+
+---
+#定义 service
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+spec:
+  selector:
+    #    指向pod的标签, 说明这个service 是 绑定 标签为 app: nginx1 的所有pod
+    app: nginx1
+  ports:
+    - protocol: TCP
+      port: 80
+      # 指向pod的端口, 就是容器的端口
+      targetPort: 80
+#      nodePort: 30001   # 手动指定，范围必须在 30000-32767 内
+  type: LoadBalancer
+
+
+## 通过 kubectl apply -f service03.yaml 来创建 , 此时 会启动一个pod 和一个 service
+## 可以通过 kubectl get all 查看
+## 返回的结果是
+
+#  kubectl get all
+#  NAME         READY   STATUS    RESTARTS   AGE
+#  pod/nginx1   1/1     Running   0          15h
+#
+#  NAME                    TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)        AGE
+#  service/kubernetes      ClusterIP   10.96.0.1        <none>        443/TCP        4d17h
+#  service/nginx-service   NodePort    10.105.213.194   <none>        80:31954/TCP   28m
+
+# 可以看到,  启动了一个 pod 和一个service(nginx-service)
+# type 是 NodePort, 代表节点端口, 80:31954的意思是, 将集群内部的端口80, 映射到节点的31954端口上
+## 也可以通过 kubectl describe service nginx-service 查看详情, 其中可以看到 Endpoints 是 10.244.1.17:80
+## 31954 其实是 k8s 自动分配的, 我们可以通过 nodePort 自己指定, 范围在 30000-32767 内
+## 10.105.213.194 是集群内部的ip, 我们通过 10.105.213.194:80 在浏览器是访问不了的
+## 但是可以进入某个容器的内部, 在通过 curl wget之类的命令访问,是可以访问
+## 如果向在浏览器访问, 需要 访问  nodeIp:nodePort, 例如 192.168.10.13:31954
+
+## 此时我们就可以通过  curl http://<node-ip>:31954 来访问这个服务. 但是 minikube 不行
+
+
+## 指定 type类型是 NodePort 代表 这个服务,可以在 集群内部访问, 也可以 通过 节点ip:端口访问
+## 这种在生产环境一般不用, 生产环境通常使用 LoadBalancer
+
+
+
+### 通过   type: LoadBalancer  可以实现负载均衡, 但是 如果使用 http 的方式访问

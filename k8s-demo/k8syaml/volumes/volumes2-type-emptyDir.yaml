@@ -1,0 +1,82 @@
+# 这说的是 卷类型是  emptyDir
+
+# 这个案例就是在 volumes 声明卷,  在 volumeMounts 中使用卷
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: emptyDir-test
+  labels:
+    app: emptyDir-test
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: emptyDir-test
+  # pod 的定义
+  template:
+    metadata:
+      name: emptyDir-test
+      labels:
+        app: emptyDir-test
+    #  pod的规约
+    spec:
+      containers:
+        - name: emptyDir-test
+          image: nginx-1.19
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+              protocol: TCP
+          # 使用卷
+          volumeMounts:
+            - name: shared-volume     # 必须与下面 volumes 中的 name 完全一致
+              mountPath: /usr/share/nginx/html   # 挂载到容器内的哪个目录
+      volumes:
+        # 这里就是声明了一个 卷，名字叫做 shared-volume
+        - name: shared-volume
+          # 卷的类型是 emptyDir
+          # 这就要知道 emptyDir 卷的特点了
+          emptyDir: { }
+      restartPolicy: Always
+
+
+
+---
+# 这个案例很有意思, 实现了卷在 容器之间的共享
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: emptydir-deployment
+  labels:
+    app: emptydir-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: emptydir-deployment
+  template:
+    metadata:
+      name: emptydir-deployment
+      labels:
+        app: emptydir-deployment
+    spec:
+      containers:
+        - name: writer
+          image: busybox
+          command: ["/bin/sh", "-c", "echo 'Hello World!' > /data/hello.txt; sleep 3600"]
+          volumeMounts:
+            - name: shared-data
+              mountPath: /data
+        - name: reader
+          image: busybox
+          command: ["/bin/sh", "-c", "cat /data/hello.txt; sleep 3600"]
+          volumeMounts:
+            - name: shared-data
+              mountPath: /data
+      volumes:
+        - name: shared-data
+          emptyDir: { }
+      restartPolicy: Always
