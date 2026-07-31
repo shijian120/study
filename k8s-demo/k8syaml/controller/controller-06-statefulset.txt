@@ -2,6 +2,11 @@
 
 StatefulSet 是用来管理有状态应用的工作负载 API 对象。
 
+工作负载: workload
+
+
+
+
 StatefulSet 用来管理某 Pod 集合的部署和扩缩， 并为这些 Pod 提供持久存储和持久标识符。
     这句话说明 statefulset 和 deployment 具有相同的功能, 而且更加强大
 
