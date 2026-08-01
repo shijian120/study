@@ -1,0 +1,19 @@
+ # 删除
+ kubectl delete deployment nginx-deployment
+
+ #同上
+ kubectl delete deployment/nginx-deployment
+
+
+ # 根据文件删除  推荐
+ kubectl delete -f  xxx.yaml
+
+ # 删除 default 名称空间的所有
+ kubectl delete all --all
+
+ kubectl delete all --all -n <名称空间>
+
+
+
+# 删除操作会 删除控制器, 同时删除pod
+

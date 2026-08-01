@@ -1,0 +1,32 @@
+# job 一次性运行, 运行完成job 就是结束了
+
+# job 一般做
+#    - 数据迁移
+#    - 数据库备份
+#    - 备份恢复
+#    - 镜像构建
+
+
+# 固定写法
+apiVersion: batch/v1
+# 资源种类
+kind: Job
+metadata:
+  # 资源名称
+  name: pi
+spec:
+  # 20s 后自动删除, 因为job是一次性任务, 可以让他运行完成后自动删除
+  ttlSecondsAfterFinished: 20
+  # pod 模板
+  template:
+    spec:
+      containers:
+        - name: pi
+          image: perl:5.34.0
+          command: ["perl",  "-Mbignum=bpi", "-wle", "print bpi(2000)"]
+      restartPolicy: Never
+  # 重试次数, 最大重试次数
+  backoffLimit: 4
+
+
+

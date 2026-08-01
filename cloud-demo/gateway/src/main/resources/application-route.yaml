@@ -1,0 +1,45 @@
+spring:
+  cloud:
+    gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allow-origin-patterns: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+
+      default-filters:
+
+      routes:
+        - id: order-route  # 就是起个名字
+          uri: lb://service-order  # 要负载均衡到的服务
+          predicates:
+            - Path=/api/order/**  # 断言，当访问路径以/api/order/ 开头 会被负载均衡，** 代表任意路径
+          order: 0  # 默认就是0  越小代表优先级越高
+
+        - id: product-router # 商品服务的id，就是一个标识
+          uri: lb://service-order
+          predicates:
+            - Path=/api/product/**
+
+
+
+        - id: order-route1
+          uri: lb://service-order
+          predicates:
+            - name: Path              # 这里是什么断言工厂
+              args:
+                  pattern: /api/order/**
+                  matchTrailingSlash: true
+
+#这个路由有2个断言
+        - id: sj
+          uri: https://baidu.com/
+          predicates:
+            - name: Path
+              args:
+                  pattern: /api/sj/**
+            - name: query
+              args:       # 这个就是内部类 config的怎么写这里就怎么写
+                  param: q
+                  regex: shijian      # 这个 regex 要怎么写要看源码 或文档

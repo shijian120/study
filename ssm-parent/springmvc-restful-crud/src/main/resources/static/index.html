@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>员工管理系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { padding: 20px; }
+        .page-header { margin-bottom: 20px; }
+        /* 自定义模态框宽度和紧凑内边距 */
+        .modal-dialog-compact {
+            max-width: 500px;
+        }
+        .modal-dialog-compact .modal-content {
+            padding: 0.5rem 0.5rem 0; /* 减小内边距 */
+        }
+        .modal-dialog-compact .modal-body {
+            padding: 1rem 1rem 0.5rem;
+        }
+        .modal-dialog-compact .modal-footer {
+            padding: 0.5rem 1rem;
+        }
+        /* 表单项紧凑 */
+        .compact-form .mb-2 {
+            margin-bottom: 0.5rem !important;
+        }
+        .compact-form .form-label {
+            font-size: 0.9rem;
+            margin-bottom: 0.15rem;
+        }
+        .compact-form .form-control, .compact-form .form-select {
+            font-size: 0.9rem;
+            padding: 0.25rem 0.5rem;
+            height: calc(1.8rem + 2px);
+        }
+        .compact-form .row {
+            margin-right: -0.3rem;
+            margin-left: -0.3rem;
+        }
+        .compact-form .row > [class*="col-"] {
+            padding-right: 0.3rem;
+            padding-left: 0.3rem;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="page-header d-flex justify-content-between align-items-center">
+        <h1>👥 员工管理</h1>
+        <button class="btn btn-primary" id="addBtn">➕ 新增员工</button>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-hover" id="employeeTable">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>姓名</th>
+                <th>年龄</th>
+                <th>邮箱</th>
+                <th>性别</th>
+                <th>地址</th>
+                <th>薪资</th>
+                <th style="width: 180px;">操作</th>
+            </tr>
+            </thead>
+            <tbody id="employeeTableBody">
+            <!-- 动态渲染 -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ========== 紧凑型模态框 ========== -->
+<div class="modal fade" id="employeeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-compact">
+        <div class="modal-content">
+            <div class="modal-header" style="padding: 0.5rem 1rem;">
+                <h5 class="modal-title" id="modalTitle" style="font-size: 1.1rem;">新增员工</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="employeeForm" class="compact-form">
+                    <input type="hidden" id="editId" name="id" value="">
+
+                    <!-- 第一行：姓名 + 年龄 -->
+                    <div class="row mb-2">
+                        <div class="col-6">
+                            <label for="name" class="form-label">姓名 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                        <div class="col-6">
+                            <label for="age" class="form-label">年龄 <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="age" name="age" required>
+                        </div>
+                    </div>
+
+                    <!-- 第二行：邮箱 + 性别 -->
+                    <div class="row mb-2">
+                        <div class="col-6">
+                            <label for="email" class="form-label">邮箱 <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                        <div class="col-6">
+                            <label for="gender" class="form-label">性别 <span class="text-danger">*</span></label>
+                            <select class="form-select" id="gender" name="gender" required>
+                                <option value="">请选择</option>
+                                <option value="男">男</option>
+                                <option value="女">女</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 第三行：地址 + 薪资 -->
+                    <div class="row mb-2">
+                        <div class="col-6">
+                            <label for="address" class="form-label">地址</label>
+                            <input type="text" class="form-control" id="address" name="address">
+                        </div>
+                        <div class="col-6">
+                            <label for="salary" class="form-label">薪资</label>
+                            <input type="number" step="0.01" class="form-control" id="salary" name="salary">
+                        </div>
+                    </div>
+                    <!-- 如果还有其他字段，可继续添加行，目前7个字段已排成三行，非常紧凑 -->
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary btn-sm" id="saveEmployeeBtn">保存</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const API_BASE = 'http://localhost:8080/api/v1'; // 根据实际调整
+
+    const modal = new bootstrap.Modal(document.getElementById('employeeModal'));
+    const form = document.getElementById('employeeForm');
+    const modalTitle = document.getElementById('modalTitle');
+    const saveBtn = document.getElementById('saveEmployeeBtn');
+    const tbody = document.getElementById('employeeTableBody');
+    let currentMode = 'add';
+
+    async function sendRequest(url, method, formDataObj = null) {
+        const options = {
+            method: method,
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        };
+        if (formDataObj) {
+            const params = new URLSearchParams();
+            for (const key in formDataObj) {
+                if (formDataObj[key] !== undefined && formDataObj[key] !== null && formDataObj[key] !== '') {
+                    params.append(key, formDataObj[key]);
+                }
+            }
+            options.body = params.toString();
+        }
+        const response = await fetch(url, options);
+        if (!response.ok) {
+            const errText = await response.text();
+            throw new Error(`请求失败 (${response.status}): ${errText}`);
+        }
+        return await response.json();
+    }
+
+    async function loadEmployees() {
+        try {
+            const result = await sendRequest(`${API_BASE}/employees`, 'GET');
+            if (result.code === 200 && result.data) {
+                renderTable(result.data);
+            } else {
+                alert('加载员工列表失败: ' + (result.msg || '未知错误'));
+            }
+        } catch (error) {
+            console.error('加载失败:', error);
+            alert('网络错误，请稍后重试');
+        }
+    }
+
+    function renderTable(employees) {
+        if (!employees || employees.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="8" class="text-center">暂无员工数据</td></tr>`;
+            return;
+        }
+        let html = '';
+        employees.forEach(emp => {
+            html += `
+                <tr>
+                    <td>${emp.id}</td>
+                    <td>${emp.name}</td>
+                    <td>${emp.age}</td>
+                    <td>${emp.email}</td>
+                    <td>${emp.gender}</td>
+                    <td>${emp.address || ''}</td>
+                    <td>${emp.salary ? emp.salary.toFixed(2) : ''}</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning edit-btn" data-id="${emp.id}">编辑</button>
+                        <button class="btn btn-sm btn-danger delete-btn" data-id="${emp.id}">删除</button>
+                    </td>
+                </tr>
+            `;
+        });
+        tbody.innerHTML = html;
+        tbody.querySelectorAll('.edit-btn').forEach(btn => {
+            btn.addEventListener('click', () => openEditModal(parseInt(btn.dataset.id)));
+        });
+        tbody.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', () => deleteEmployee(parseInt(btn.dataset.id)));
+        });
+    }
+
+    document.getElementById('addBtn').addEventListener('click', () => {
+        currentMode = 'add';
+        modalTitle.textContent = '新增员工';
+        form.reset();
+        document.getElementById('editId').value = '';
+        modal.show();
+    });
+
+    async function openEditModal(id) {
+        try {
+            const result = await sendRequest(`${API_BASE}/employee/${id}`, 'GET');
+            if (result.code === 200 && result.data) {
+                const emp = result.data;
+                currentMode = 'edit';
+                modalTitle.textContent = '编辑员工';
+                document.getElementById('editId').value = emp.id;
+                document.getElementById('name').value = emp.name || '';
+                document.getElementById('age').value = emp.age || '';
+                document.getElementById('email').value = emp.email || '';
+                document.getElementById('gender').value = emp.gender || '';
+                document.getElementById('address').value = emp.address || '';
+                document.getElementById('salary').value = emp.salary || '';
+                modal.show();
+            } else {
+                alert('获取员工信息失败: ' + (result.msg || '未知错误'));
+            }
+        } catch (error) {
+            console.error('获取员工信息失败:', error);
+            alert('网络错误，请稍后重试');
+        }
+    }
+
+    saveBtn.addEventListener('click', async () => {
+        const name = document.getElementById('name').value.trim();
+        const age = document.getElementById('age').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const gender = document.getElementById('gender').value;
+        if (!name || !age || !email || !gender) {
+            alert('请填写完整信息（姓名、年龄、邮箱、性别为必填）');
+            return;
+        }
+
+        const formData = {
+            name,
+            age: parseInt(age),
+            email,
+            gender,
+            address: document.getElementById('address').value.trim(),
+            salary: parseFloat(document.getElementById('salary').value) || 0,
+        };
+
+        let url, method;
+        if (currentMode === 'add') {
+            url = `${API_BASE}/employee`;
+            method = 'POST';
+        } else {
+            const id = parseInt(document.getElementById('editId').value);
+            if (!id) {
+                alert('数据异常，请重新打开编辑');
+                return;
+            }
+            formData.id = id;
+            url = `${API_BASE}/employee`;
+            method = 'PUT';
+        }
+
+        try {
+            const result = await sendRequest(url, method, formData);
+            if (result.code === 200) {
+                modal.hide();
+                await loadEmployees();
+                alert(currentMode === 'add' ? '新增成功' : '更新成功');
+            } else {
+                alert('操作失败: ' + (result.msg || '未知错误'));
+            }
+        } catch (error) {
+            console.error('保存失败:', error);
+            alert('网络错误，请稍后重试');
+        }
+    });
+
+    async function deleteEmployee(id) {
+        if (!confirm(`确定要删除 ID 为 ${id} 的员工吗？此操作不可撤销！`)) {
+            return;
+        }
+        try {
+            const result = await sendRequest(`${API_BASE}/employee/${id}`, 'DELETE');
+            if (result.code === 200) {
+                await loadEmployees();
+                alert('删除成功');
+            } else {
+                alert('删除失败: ' + (result.msg || '未知错误'));
+            }
+        } catch (error) {
+            console.error('删除失败:', error);
+            alert('网络错误，请稍后重试');
+        }
+    }
+
+    loadEmployees();
+</script>
+</body>
+</html>

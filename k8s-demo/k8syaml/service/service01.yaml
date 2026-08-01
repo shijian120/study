@@ -1,0 +1,47 @@
+# 这个是一个案例
+
+apiVersion: v1
+kind: Service
+metadata:
+  # service的名字
+  name: my-service
+
+spec:
+  # 通过label找到带有app.kubernetes.io/name=MyApp的pod
+  selector:
+    # 选择标签的key 是 app.kubernetes.io/name, value是  MyApp
+    app.kubernetes.io/name: MyApp
+  # 默认值ClusterIP, 看下面笔记
+  type: ClusterIP
+  ports:
+    - protocol: TCP
+      # service 的端口
+      port: 80
+      # pod 的端口
+      targetPort: 9376
+
+
+
+
+#  service 的特性
+#  ● Service 通过 label 关联对应的 Pod
+#  ● Service 生命周期不跟 Pod 绑定，不会因为 Pod 重新创建而改变 IP
+#  ● 提供了负载均衡功能，自动转发流量到不同 Pod
+#  ● 可对集群外部提供访问端口
+#  ● 集群内部可通过服务名字访问
+
+
+#  type的取值
+
+#  ClusterIP：给我内部微服务互相调用的（内网专用）。
+#         这种用在微服务之间, 例如订单服务调用 支付服务
+#
+#  NodePort：给我临时调试，或者公司内网用的（内网暴露端口）。
+#
+#  LoadBalancer：给真正互联网用户用的（公网入口）。
+#
+#  ExternalName：让集群内部假装外面某个 IP 是自己人（移花接木）。
+#
+#  最关键的逻辑层级（套娃关系）：
+#  LoadBalancer 底层依赖 NodePort，NodePort 底层依赖 ClusterIP。
+#  流量走向：公网用户 -> LoadBalancer(公网IP) -> NodePort(节点端口) -> ClusterIP(虚拟IP) -> Pod(10.244.x.x)。

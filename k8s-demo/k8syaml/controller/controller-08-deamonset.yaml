@@ -1,0 +1,27 @@
+## daemonSet  每个节点运行一个pod     日志收集,集群监控
+
+##  daemonSet 和 deployment 其实差不多,没什么说的, 就是每个节点运行一个, 不能指定副本
+
+
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: daemonSetDemo
+spec:
+  selector:
+    matchLabels:
+      app: daemonSetDemo
+  template:
+    metadata:
+      labels:
+        app: daemonSetDemo
+    spec:
+      containers:
+        - name: busybox
+          image: busybox
+          args:
+            - /bin/sh
+            - -c
+            - 'while true; do ping -c 4 8.8.8.8; sleep 60; done'
+            
+            

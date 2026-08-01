@@ -1,0 +1,58 @@
+CREATE DATABASE `mybatis-example`;
+
+USE `mybatis-example`;
+
+CREATE TABLE `t_emp`(
+    id INT AUTO_INCREMENT,
+    emp_name CHAR(100),
+    age INT,
+    emp_salary DOUBLE(10,5),
+    PRIMARY KEY(id)
+);
+
+INSERT INTO `t_emp`(emp_name, age, emp_salary) VALUES ('tom', 18, 200.33);
+INSERT INTO `t_emp`(emp_name, age, emp_salary) VALUES ('jerry', 19, 666.66);
+INSERT INTO `t_emp`(emp_name, age, emp_salary) VALUES ('andy', 20, 777.77);
+
+
+
+
+# 以下是关联关系表的 测试代码
+
+
+-- ========================================
+-- 1. 创建客户表 t_customer
+-- ========================================
+CREATE TABLE `t_customer` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '客户ID，主键自增',
+    `customer_name` VARCHAR(255) NOT NULL COMMENT '客户姓名',
+    `phone` VARCHAR(255) NOT NULL COMMENT '电话号码',
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='客户表';
+
+-- ========================================
+-- 2. 创建订单表 t_order
+-- ========================================
+CREATE TABLE `t_order` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '订单ID，主键自增',
+    `address` VARCHAR(255) NOT NULL COMMENT '收货地址',
+    `amount` DECIMAL(10,2) NOT NULL COMMENT '订单金额（两位小数）',
+    `customer_id` BIGINT NOT NULL COMMENT '所属客户ID（外键）',
+    PRIMARY KEY (`id`),
+    KEY `idx_customer_id` (`customer_id`),
+    CONSTRAINT `fk_order_customer` FOREIGN KEY (`customer_id`) REFERENCES `t_customer` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='订单表';
+
+
+
+-- 插入客户数据
+INSERT INTO `t_customer` (`customer_name`, `phone`) VALUES
+('张三', '13100000000'),
+('李四', '13200000000'),
+('王五', '13300000000');
+
+-- 插入订单数据
+INSERT INTO `t_order` (`address`, `amount`, `customer_id`) VALUES
+('西安市雁塔区', 99.98, 1),
+('北京市', 199.00, 1),
+('深圳市', 299.00, 2);

@@ -1,0 +1,19 @@
+spring:
+    profiles:
+        include:
+            - feign
+            - sentinel
+    # 这么写不对，
+    # profiles 不是指定的文件全名，如果全名，spring提供了一个 好像是 spring.config.xxx的属性
+    # 简单来说 代 profiles 是激活的环境配置
+    #      - spring-feign.yaml
+
+
+
+
+
+
+
+
+
+

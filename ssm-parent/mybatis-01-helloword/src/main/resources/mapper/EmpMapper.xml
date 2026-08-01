@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sj.mapper.EmpMapper">
+
+    <!--
+        namespace 是 接口的全类名 , 代表 当前的xml文件和 com.sj.dao.EmpMapper 接口进行绑定
+
+        id 是 接口中方法的名字
+        resultType 是 返回值的类型, 把结果封装成什么类型
+
+        # 告诉mybatis xml文件的位置 默认位置  classpath:mapper/**.xml
+        mybatis.mapper-locations=classpath:mapper/**.xml
+
+      -->
+
+    <!--
+       规范:
+       实体类 属性命名是 小驼峰
+       数据库 字段命名是  underscore(下划线)
+
+       问题: 导致不能正确封装到对应的 实体类属性
+       解决办法:
+       1. 通过 起别名的方式
+    -->
+    <select id="selectById" resultType="com.sj.bean.Emp">
+        SELECT id, emp_name empName, age, emp_salary empSalary
+        FROM t_emp
+        WHERE id = #{id}
+    </select>
+
+
+    <select id="selectAllEmp" resultType="com.sj.bean.Emp">
+    	SELECT id, emp_name empName, age, emp_salary empSalary
+        FROM t_emp
+    </select>
+
+    <!--
+    useGeneratedKeys 告诉mybatis 使用自动生成的id
+    keyProperty 把生成的id值, 设置到 emp对象的id属性
+    上述是 自增id回填机制
+
+    解释, 接口传递的是 Emp 对象, 没有携带id, 当执行插入操作时, mybatis 会自动把生成的id, 设置到 emp对象的id属性
+    -->
+    <insert id="insertEmp" useGeneratedKeys="true" keyProperty="id">
+<!--   传过来的是 emp对象, 这里直接通过 #{属性} 取值, 没有使用#{emp.id} 的方式     -->
+        INSERT INTO t_emp(id, emp_name, age, emp_salary)
+        VALUES(#{id}, #{empName}, #{age}, #{empSalary})
+    </insert>
+
+<!--
+根据id更新
+-->
+    <update id="updateEmpById">
+        UPDATE t_emp SET emp_name = #{empName}, age = #{age}, emp_salary = #{empSalary}
+        WHERE id = #{id}
+    </update>
+
+
+
+    <delete id="deleteEmpById">
+        DELETE FROM t_emp
+        WHERE id = #{id}
+    </delete>
+
+</mapper>

@@ -1,0 +1,77 @@
+# 容器的探针 probe
+# 是kubelet 定期对容器进行检查的手段, 有了探针,就可以对容器进行检查了, 如果容器不健康,可以杀死容器
+# 当容器被杀死, 又会根据容器的 重启策略,重新启动容器, 从而达到自我修复的目的
+# 但是要注意, 探针只是手段, 不能治本, 容器本身的问题, 需要解决容器的问题 !!!!
+## 这里的意思是, 假设容器自身有问题, 每次启动后, 容器的就绪探针(livenessProbe) 会失败, 那么kubelet 会杀死容器, 会一直循环下去
+
+# livenessProbe（存活探针）决定了“Pod 要不要重启”，
+# readinessProbe（就绪探针）决定了“流量要不要打进来”。
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: container-probe
+  labels:
+    role: container-probe
+spec:
+  containers:
+    - name: container-probe
+      image: nginx:1.19
+      imagePullPolicy: IfNotPresent
+      # 检查容器是否还在运行。如果失败，kubelet 会杀死容器并根据重启策略决定是否重启。
+      livenessProbe:
+        # 发起一个get请求
+        httpGet:
+          # 请求路径
+          path: /
+          # 请求端口
+          port: 80
+          scheme: HTTP
+        # 像是springboot项目, 启动比较慢, 可以先等待一会,在检查
+        initialDelaySeconds: 5   # 启动后等5秒再检查
+        periodSeconds: 10        # 每10秒检查一次
+        timeoutSeconds: 3        # 检查超时时间
+        failureThreshold: 3    # 重试次数,超过3次,才会认为容器不健康
+        successThreshold: 1   # 重试成功次数, 默认是1
+       # 就绪探针
+      readinessProbe:
+        httpGet:
+          path: /
+          port: 80
+          scheme: HTTP
+        initialDelaySeconds: 5
+        periodSeconds: 5
+      ports:
+        - containerPort: 80
+          protocol: TCP
+  restartPolicy: Always
+
+
+---
+# 这个案例 是 通过 tcpSocket 来检查容器是否健康, 是否在运行
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: liveness-tcpsocket
+  labels:
+    tcpSocket: tcpsocket
+spec:
+  containers:
+    - name: nginx
+      image: nginx:1.19
+      ports:
+        - containerPort: 80
+      args:
+        - /bin/sh
+        - -c
+        - sleep 7;nginx -g "daemon off;"  # 这一步会和初始化同时开始运行，也就是在初始化5s后和7秒之间，会检测出一次失败，7秒后启动后检测正常，所以pod不会重启
+      imagePullPolicy: IfNotPresent
+      livenessProbe:
+        tcpSocket:
+          port: 80
+        initialDelaySeconds: 5  # 初始化时间5s
+        periodSeconds: 4        # 检测间隔时间4s
+        timeoutSeconds: 1       # 默认检测超时时间为1s
+        failureThreshold: 3     # 默认失败次数为3次，达到3次后重启pod
+        successThreshold: 1     # 默认成功次数为1次，1次代表成功

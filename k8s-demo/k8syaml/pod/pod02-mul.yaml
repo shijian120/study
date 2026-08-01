@@ -1,0 +1,27 @@
+## 一个pod 中有多个容器
+
+## 拉取容器中的镜像  minikube image load nginx:1.19
+
+apiVersion: v1
+kind: Pod
+metadata:
+  # pod的名称
+  name: mulPod
+  labels:
+    role: mulPod
+spec:
+  containers:
+    - name: nginx
+      image: nginx:1.19
+      imagePullPolicy: IfNotPresent
+      ports:
+        - containerPort: 80
+          protocol: TCP
+
+    - name: redis
+      image: redis:5.0.10
+      ports:
+        - containerPort: 6379
+          protocol: TCP
+  restartPolicy: Always
+  

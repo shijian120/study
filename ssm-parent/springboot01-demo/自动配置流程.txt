@@ -1,0 +1,117 @@
+1. 导入 stater, 都会导入一个 基础依赖  spring-boot-starer
+    例如导入  spring-boot-starer-web , 就是导入基础依赖  spring-boot-starer
+    spring-boot-starer 是一个 基石
+
+2. 启动 main方法
+
+3. main方法标注了  @SpringBootApplication 注解
+@SpringBootApplication 注解又是下面3个注解的组合注解
+
+@Inherited
+@SpringBootConfiguration
+@EnableAutoConfiguration
+@ComponentScan(excludeFilters = { @Filter(type = FilterType.CUSTOM, classes = TypeExcludeFilter.class),
+		@Filter(type = FilterType.CUSTOM, classes = AutoConfigurationExcludeFilter.class) })
+
+其中 @EnableAutoConfiguration 的意思就是启动自动配置
+
+@EnableAutoConfiguration 注解又是一个复合注解, 他是下面2个注解的组合
+
+    @AutoConfigurationPackage
+    @Import(AutoConfigurationImportSelector.class)
+
+其中  @Import(AutoConfigurationImportSelector.class)  才是核心 !!!!!!!!!!!!!!!!!
+
+这个 @Import(AutoConfigurationImportSelector.class)  导入了一个 AutoConfigurationImportSelector
+
+AutoConfigurationImportSelector. 进行了 批量注入组件.
+
+这里有一个知识,就是 @Import 这个注解, 这个注解有几种使用方式,
+例如 @Import(XXX.class) 就是导入 XXX组件,  @Import(AAA.class)  AAA这个类可以实现一个接口 ImportSelector 可以进行批量导入组件
+这里就是使用批量导入组件的功能
+
+总之最终会调用到 这个方法
+	protected AutoConfigurationEntry getAutoConfigurationEntry(AnnotationMetadata annotationMetadata) {
+		if (!isEnabled(annotationMetadata)) {
+			return EMPTY_ENTRY;
+		}
+		AnnotationAttributes attributes = getAttributes(annotationMetadata);
+		List<String> configurations = getCandidateConfigurations(annotationMetadata, attributes);
+		configurations = removeDuplicates(configurations);
+		Set<String> exclusions = getExclusions(annotationMetadata, attributes);
+		checkExcludedClasses(configurations, exclusions);
+		configurations.removeAll(exclusions);
+		configurations = getConfigurationClassFilter().filter(configurations);
+		fireAutoConfigurationImportEvents(configurations, exclusions);
+		return new AutoConfigurationEntry(configurations, exclusions);
+	}
+
+在上述方法中 会调用 getCandidateConfigurations(annotationMetadata, attributes) 方法
+
+	protected List<String> getCandidateConfigurations(AnnotationMetadata metadata,
+			@Nullable AnnotationAttributes attributes) {
+		ImportCandidates importCandidates = ImportCandidates.load(this.autoConfigurationAnnotation,
+				getBeanClassLoader());
+		List<String> configurations = importCandidates.getCandidates();
+		Assert.state(!CollectionUtils.isEmpty(configurations),
+				"No auto configuration classes found in " + "META-INF/spring/"
+						+ this.autoConfigurationAnnotation.getName() + ".imports. If you "
+						+ "are using a custom packaging, make sure that file is correct.");
+		return configurations;
+	}
+
+只会 经过一些列调用,又会 进入到
+    public static ImportCandidates load(Class<?> annotation, @Nullable ClassLoader classLoader) {
+        Assert.notNull(annotation, "'annotation' must not be null");
+        ClassLoader classLoaderToUse = decideClassloader(classLoader);
+        String location = String.format("META-INF/spring/%s.imports", annotation.getName());
+        Enumeration<URL> urls = findUrlsInClasspath(classLoaderToUse, location);
+        List<String> importCandidates = new ArrayList();
+
+        while(urls.hasMoreElements()) {
+            URL url = (URL)urls.nextElement();
+            importCandidates.addAll(readCandidateConfigurations(url));
+        }
+
+        return new ImportCandidates(importCandidates);
+    }
+
+到了这里就可以看到这么一行代码
+        String location = String.format("META-INF/spring/%s.imports", annotation.getName());
+这就是加载自动配置的位置,其中 %s 就是占位符, 会被 annotation.getName() 替代
+最终的路径就是  META-INF/spring/annotation.getName().imports 文件中加载自动配置
+
+最终的路径就是 META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports
+
+因此会从 META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports 文件中导入自动配置类
+
+注意, 在我们的项目是没有这个文件的, 但是在我们导入的 spring-boot-starer 基础依赖中, 他引入了 spring-boot-autoconfigure 包
+这个包中有 META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports文件
+
+注意: META-INF/spring/ 是目录
+
+org.springframework.boot.autoconfigure.AutoConfiguration.imports 是文件
+在这个文件中定义了要导入的 XXXAutoconfiguration 的自动配置类(可以理解成以前的 配置文件)
+
+例如我们就可以查看 自动配置类, 例如 查看 数据源的自动配置类, DatasourceAutoconfiguration, 其实就可以理解成数据源的配置文件
+
+但是这个 配置类/"配置文件" 要想生效, 又需要 @Conditional注解进行 进行条件判断
+
+
+
+
+## 总结 自动配置
+1. 在导包的时候导入了 spring-boot-starer 依赖 , spring-boot-starer 又导入了自动配置包
+2. 在启动的时候, 扫描到了 @EnableAutoConfiguration
+3. 而 @EnableAutoConfiguration  又是
+    @AutoConfigurationPackage 和  @Import(AutoConfigurationImportSelector.class) 的组合
+4. 因此会扫描到  @Import(AutoConfigurationImportSelector.class)
+5. 在 AutoConfigurationImportSelector 中, 会导入 org.springframework.boot.autoconfigure.AutoConfiguration.imports 文件
+中定义类 自动配置类 XXXAutoconfiguration
+6. 在自动配置类中, 又 通过 @Conditional 注解进行判断, 看是否需要导入 对应的 bean
+7. 又通过 @ConfigurationProperties 注解 实现了和 配置文件的绑定
+
+
+
+
+

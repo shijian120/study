@@ -1,0 +1,63 @@
+# 1. 指定 Kubernetes API 的版本（v1 是核心 API 组）
+apiVersion: v1
+
+# 2. 声明要创建的资源类型是 Pod
+kind: Pod
+
+# 3. Pod 的元数据信息
+metadata:
+  # Pod 的名称，在命名空间内必须唯一
+  name: configmap-pod
+
+# 4. Pod 的内部规格定义（定义 Pod 到底怎么跑）
+spec:
+  # 5. 定义 Pod 里运行的容器列表（这里只有一个容器）
+  containers:
+    # 容器的名称，用于在 Pod 内区分不同容器
+    - name: test
+
+      # 容器使用的镜像（busybox 是轻量级 Linux 工具集）
+      image: busybox:1.28
+
+      # 容器启动时执行的命令
+      # 先打印 "The app is running!"，然后用 tail -f /dev/null 阻塞前台进程，防止容器退出
+      command: ['sh', '-c', 'echo "The app is running!" && tail -f /dev/null']
+
+      # 6. 定义将卷挂载到容器内的哪个位置
+      volumeMounts:
+        # 关联下面 volumes 中定义的卷名称（必须完全一致）
+        - name: config-vol
+
+          # 容器内部的挂载目标路径（即文件会出现在容器的 /etc/config 目录下）
+          mountPath: /etc/config
+
+  # 7. 定义 Pod 级别的卷（供上面的容器挂载使用）
+  volumes:
+    # 卷的名称，用于在 volumeMounts 中引用
+    - name: config-vol
+
+      # 8. 声明这个卷的数据来源是 ConfigMap (注意此时我们还没有configMap)
+      configMap:
+        # 引用的 ConfigMap 对象的名称（必须在同一个命名空间下）
+        name: log-config
+
+        # 9. （可选）选择性提取 ConfigMap 中的特定键值对
+        items:
+          # 提取 ConfigMap 中 key 为 "log_level" 的那一项
+          - key: log_level
+
+            # 将此键的值写入容器内的文件名为 "log_level.conf"
+            path: log_level.conf
+
+---
+#config-map
+
+
+
+
+
+
+
+
+
+

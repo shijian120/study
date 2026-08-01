@@ -1,0 +1,40 @@
+# podAffinity 的亲和性
+# 前面介绍了节点间的亲和性, 这里介绍pod间的亲和性
+
+# pod的亲和性,其实就是希望 多个pod 可以调度到某个 已经存在的pod 上, 这样可以减少网络延迟, 降低 latency(延迟)
+
+# 解释: pod的亲和性,说的是 1个pod 假设已经部署在 node1节点了, 现在我们又想部署一个pod, 但是我们也希望将他 部署到之前的pod 部署在一个区域
+# 此时我们就可以使用pod affinity, 来实现我们的需求
+# 在这里引入了一个 topologyKey 的概念,  假设我们的k8s 集群 有和多的节点, 此时我们如果是 pod间的亲和性,在部署的是时候, 如果没有 topologyKey
+# 此时我们 只能一个 节点 一个节点的找, 有了 topologyKey 的概念, 我们可以给 一个区域的 node 都指定同样的标签
+# 这样他会先调度到 key 是 bj的 标签, 在从这里面找  disk=ssd的标签 调度
+# topologyKey 其实就是分组
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: podAffinity
+  labels:
+    app: nginx
+spec:
+  containers:
+    - name: podAffinity
+      image: nginx:1.19
+      imagePullPolicy: IfNotPresent
+      ports:
+        - containerPort: 80
+          protocol: TCP
+  affinity:
+    # pod 间的亲和性
+    podAffinity:
+      # 要求必须
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - topologyKey: bj
+          labelSelector:
+            matchLabels:
+              app: nginx
+  restartPolicy: Always
+
+
+# 可以看出, 一个pod的 可以很 灵活的调度到我们想让他去的节点
+# 但是要注意, 我们最好也是灵活指定, 而不是 写死一定要调度到那个节点, 而是让他调度到 一类节点, 防止单点故障

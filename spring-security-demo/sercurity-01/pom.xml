@@ -3,23 +3,13 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.sj</groupId>
+        <artifactId>spring-security-demo</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
 
-    <groupId>com.sj</groupId>
-    <artifactId>ssm-parent</artifactId>
-    <version>1.0-SNAPSHOT</version>
-
-<!--  父项目   -->
-    <packaging>pom</packaging>
-
-    <modules>
-        <module>spring-01-ioc</module>
-        <module>spring-02-aop</module>
-        <module>spring-03-tx</module>
-        <module>springmvc-01-hellowrod</module>
-        <module>springmvc-restful-crud</module>
-        <module>springmvc-02-best-practice</module>
-        <module>mybatis-01-helloword</module>
-    </modules>
+    <artifactId>sercurity-01</artifactId>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -28,6 +18,10 @@
     </properties>
 
 
-
-
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+    </dependencies>
 </project>

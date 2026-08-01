@@ -1,0 +1,35 @@
+# 污点 和 容忍度
+
+# 污点是打在节点上的标记，告诉调度器：“除非 Pod 明确声明能容忍这个污点，否则不要将 Pod 调度到我这里。”
+# 这个一般主节点 都会有 污点, 我们 我们调度pod的时候,都不会调度掉主节点, 因为 主节点有污点, 不会被调度到他上面
+
+# 容忍度是打在 Pod 上的标记，告诉调度器：“我可以容忍这个节点上的某个污点，请把我调度上去。”
+
+# 就是像一个 女生交了好几个男朋友(污点), 另一个男生 介不介意(容忍度)
+
+# 一个污点由 key、value 和 effect 三部分组成，格式为：key=value:effect
+
+# 给 节点   添加 污点
+# kubectl taint nodes <节点名称> key1=value1:NoSchedule
+
+# 给 节点   添加 污点
+# kubectl taint nodes <节点名称> key1=value1:NoExecute
+# 查看 节点的 所有 污点 和 容忍度
+# kubectl describe node <节点名称>
+
+# 删除 节点的 某个 污点
+# kubectl taint nodes <节点名称> key1=value1:NoSchedule-
+
+# 删除 节点的 某个 污点
+# kubectl taint nodes <节点名称> key1=value1:NoExecute-
+
+# 删除 节点的 所有 污点
+# kubectl taint nodes <节点名称> --all
+
+# 污点有3种类型 NoSchedule, PreferNoSchedule,NoExecute
+# NoSchedule	如果 Pod 没有容忍这个污点，调度器不会将 Pod 调度到该节点。不影响已经运行在该节点上的 Pod。	将新 Pod 挡在节点外，但不影响已有 Pod。
+
+# PreferNoSchedule	尽量不将没有容忍度的 Pod 调度到该节点，但如果实在没有其他地方可调度，也可以放过来。这是 NoSchedule
+# 的“软”版本。	节点负载较高但不希望强制拒绝。
+
+# NoExecute	如果 Pod 没有容忍这个污点，不仅不能调度上来，已经运行在该节点上的 Pod 也会被驱逐。	节点故障、维护或需要清空节点时使用。

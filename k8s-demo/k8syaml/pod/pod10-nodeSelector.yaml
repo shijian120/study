@@ -1,0 +1,110 @@
+# 节点亲和性
+# 作用: 将pod 分配到特定的节点(注意,这了说的,特定节点, 不是单纯说的某一个节点, 应该说是某一类节点)
+
+#你可以使用下列方法中的任何一种来选择 Kubernetes 对特定 Pod 的调度：
+#● 与节点标签匹配的 nodeSelector  推荐
+#● 亲和性与反亲和性			推荐
+#● nodeName 字段	   (这种不推荐, 因为指定节点名字,相当于定死了, 如果这个节点宕机,那么就无法分配了)
+#● Pod 拓扑分布约束			推荐
+
+# 获取所有节点(node), 变显示标签
+#kubectl get nodes --show-labels
+
+# 获取所有pod, 变显示标签
+#kubectl get pod --show-labels
+
+
+# 给节点加标签
+#kubectl label nodes <node_name> <label_name>=<label_value>
+
+# 给pod加标签
+#kubectl label pod <pod_name> <label_name>=<label_value>
+
+
+
+# 默认k8s 是随意 将 pod 调度到任意节点上
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-selector-demo
+spec:
+  containers:
+    - name: nginx-selector-demo
+      image: nginx:1.19
+      imagePullPolicy: IfNotPresent
+      ports:
+        - containerPort: 80
+          protocol: TCP
+  restartPolicy: Always
+
+
+---
+# 通过 nodeSelector 调度到指定的节点
+# nodeSelector 选择的是节点的标签, 因此其实是指定标签调度
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-selector-demo
+spec:
+  containers:
+    - name: nginx-selector-demo
+      image: nginx:1.19
+      imagePullPolicy: IfNotPresent
+      ports:
+        - containerPort: 80
+          protocol: TCP
+  restartPolicy: Always
+  # 节点选择器, 将当前pod 调度到 node 标签有  disk=ssd的节点上
+  # 如果 标签中 不存在 disk=ssd 此时 pod 会处于 pending状态
+  # 因此说明 nodeSelector 必须调度到指定的标签上
+  nodeSelector:
+    disk: ssd
+
+
+---
+# 根据节点的名字调度
+# 这种调度意义不大,如果根据节点的名字调度,那么就一定会调度到指定节点
+# 如果调度到指定节点, 此时如果指定节点宕机, 那么这个 pod 也就无法调度了
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-selector-demo
+spec:
+  containers:
+    - name: nginx-selector-demo
+      image: nginx:1.19
+      imagePullPolicy: IfNotPresent
+      ports:
+        - containerPort: 80
+          protocol: TCP
+  restartPolicy: Always
+  # 节点的名字, 其实就是服务器的名字 hostName
+  nodeName: node2
+
+---
+# 根据节点的亲和性调度
+# 亲和性调度, 就是亲和性与反亲和性
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-selector-demo
+spec:
+  containers:
+    - name: nginx-selector-demo
+      image: nginx:1.19
+      imagePullPolicy: IfNotPresent
+      ports:
+        - containerPort: 80
+          protocol: TCP
+  restartPolicy: Always
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: disk
+                operator: In
+                values:
+                  - ssd
+

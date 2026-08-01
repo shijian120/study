@@ -1,0 +1,12 @@
+
+spring:
+    cloud:
+        sentinel:
+            transport:
+                # 配置sentinel 地址,注意 sentinel的控制台需要启动
+                dashboard: localhost:8081
+                port: 8719
+            eager: true  # 默认是false（懒加载） ，也就是请求有了，才会在控制台上显示资源，如果设置成true，上来就会在控制显示
+            # web的统一上下文, 默认是 true
+            web-context-unify: true
+

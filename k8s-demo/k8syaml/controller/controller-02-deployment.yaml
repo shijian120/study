@@ -1,0 +1,73 @@
+# Deployment 控制器的案例
+
+# 通过 kubectl api-versions 命令 可以查看目前支持的api版本
+# 其中 apps 是 kubernetes 的一个 apiGroup, v1 是该组下的一个版本
+apiVersion: apps/v1
+# 说明这是一个 Deployment 控制器
+kind: Deployment
+# Deployment 控制器的基本元信息
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+# Deployment 控制器的规格定义
+spec:
+  # 副本数是3
+  replicas: 3
+  # 选择器
+  selector:
+    # 根据标签选择
+    matchLabels:
+      # 选择具有标签 app: nginx pod的资源, 其实就是要和 template中指定的标签对应上,才是选择对应的pod
+      app: nginx111
+  # 模板用于描述它所管理的 pod ,这个就是之前中pod中的写法
+  template:
+    metadata:
+      # pod的名字, 可以不写,因为如果部署多个pod 名字的意义不大
+      name: nginx01
+      # pod的标签, 上面 选择的资源的标签就是这个
+      labels:
+        app: nginx111
+    # pod的规格定义, 这里就是之前pod的定义写法
+    spec:
+      containers:
+        - name: nginx001
+          image: nginx:1.19
+          ports:
+            - containerPort: 80
+          # pod的重启策略,这里不写 默认就是这个值
+      restartPolicy: Always
+
+# 执行 kubectl apply -f k8s-demo/k8syaml/controller/controller-02-deployment.yaml  来运行这个 controller
+
+# 通过 kubectl get pod  查看pod
+# 可以看到 返回的结果
+#  NAME                                READY   STATUS    RESTARTS   AGE
+#  nginx-deployment-558cc6846c-9cj59   1/1     Running   0          8s
+#  nginx-deployment-558cc6846c-qzqf4   1/1     Running   0          8s
+#  nginx-deployment-558cc6846c-r4jjm   1/1     Running   0          8s
+
+# 解释说明运行了 3个 nginx, 并且他们的名字是随机生成的, 之前我们在 通过pod创建的时候,名字是自己指定的
+# 其实我们在上述yaml 中也指定的了Deployment 的名字, 是nginx-deployment ,
+# 但是 因为要启动3个pod ,因此 他会根据 deployment 的名字 生成 3个pod ,名字为 nginx-deployment-xxxxx
+
+
+# 执行 kubectl get deployment  可以查看控制器的信息
+
+# 返回的结果如下
+#  NAME               READY   UP-TO-DATE   AVAILABLE   AGE
+#  nginx-deployment   3/3     3            3           4m
+
+# 说明 控制器 deployment的名字是  nginx-deployment
+
+# 3/3 的意思是 副本是3 启动了3个
+
+
+## 删除  kubectl delete deployment nginx-deployment
+## 当我们删除了控制器, 在执行  kubectl get pod  查看pod, 发现之前创建的3个pod也自动删除了
+# 执行 kubectl get deployment  或 kubectl get pod 会发现 控制器和pod 都会被删除
+
+## 解释, 其实就是通过 deployment 控制前来创建管理pod的, 当我执行了
+## kubectl apply -f controller-02-deployment.yaml  的时候,就会根据这个yaml 文件中的描述,
+## 自动创建3个pod, 名字为 nginx-deployment-xxxxx
+
